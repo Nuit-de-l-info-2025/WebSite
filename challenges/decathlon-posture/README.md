@@ -1,6 +1,5 @@
 # 🏋️ CTO de Votre Santé Posturale
 
-
 ## 🎯 Fonctionnalités
 
 ### Niveau 1 : Profilage Sportif ✅
@@ -28,12 +27,6 @@ git clone https://github.com/VOTRE-USERNAME/decathlon-posture-cto.git
 cd decathlon-posture-cto
 ```
 Puis ouvrez `index.html` dans votre navigateur.
-
-### Option 3 : GitHub Pages
-Le projet est automatiquement déployé sur GitHub Pages :
-```
-https://VOTRE-USERNAME.github.io/decathlon-posture-cto/
-```
 
 ## 📁 Structure du Projet
 
@@ -84,8 +77,7 @@ L'application est entièrement responsive et s'adapte à tous les écrans :
 8. Auto-évaluation posturale
 
 
-
 <div align="center">
-  <p>🌙 Nuit de l'Info 2025 • Challenge Decathlon</p>
+  <p>🌙 Nuit de l'Info 2024 • Challenge Decathlon</p>
   <p>Made with ❤️ and JavaScript</p>
 </div>
