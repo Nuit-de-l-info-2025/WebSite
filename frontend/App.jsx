@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Send, Terminal, BookOpen, MessageCircle, User } from 'lucide-react'; 
+import { X, BookOpen, MessageCircle, User } from 'lucide-react'; 
+// IMPORT DU NOUVEAU COMPOSANT CHAT
+import ChatScreen from './ChatScreen'; // Assurez-vous que le chemin d'accès est correct
 
 // CONSTANTE FIXE : Nom de l'équipe pour le prompt du Terminal
 const LOGIN_NAME = 'nuit-de-l-apero'; 
@@ -14,11 +16,7 @@ const UbuntuDesktop = () => {
         '',
     ]);
     const [input, setInput] = useState('');
-    
-    // Suggestions initiales allégées
-    const [suggestions, setSuggestions] = useState(['help', 'ls', 'cd about']); 
-    
-    // État de sécurité - DÉFINI ET FIXÉ À TRUE (Accès débloqué)
+    const [suggestions, setSuggestions] = useState([]); 
     const [isAccessGranted, setIsAccessGranted] = useState(true); 
 
     const [showTerminal, setShowTerminal] = useState(false);
@@ -27,30 +25,27 @@ const UbuntuDesktop = () => {
     const [userName, setUserName] = useState('maelh'); 
     const [settingsInput, setSettingsInput] = useState('maelh'); 
     
-    const [chatMessages, setChatMessages] = useState([
-        { type: 'system', text: 'Bienvenue au chat!', author: 'Nuit de l\'Apéro', timestamp: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) }
-    ]);
-    const [chatInput, setChatInput] = useState('');
+    // États du Chat supprimés d'ici : chatMessages, chatInput, chatEndRef
     
     const terminalEndRef = useRef(null);
-    const chatEndRef = useRef(null);
     
     const [showFileContent, setShowFileContent] = useState(false);
     const [fileContent, setFileContent] = useState('');
 
     const API_URL = 'http://localhost:5000/api';
 
-    // Définitions des pages (inchangées)
+    // Définitions des pages (home, chat, projets, equipe)
     const pages = {
         home: { name: 'home', title: 'Accueil' },
-        about: { name: 'about', title: 'À propos' },
-        contact: { name: 'contact', title: 'Contact' },
         chat: { name: 'chat', title: 'Chat' },
         projets: { name: 'projets', title: 'Projets' },
         equipe: { name: 'equipe', title: 'Équipe' }
     };
 
-    // Définitions des fichiers (avec equipe.txt toujours présent)
+    // Liste complète des commandes (utilisée pour l'auto-complétion)
+    const availableCommands = ['help', 'ls', 'cd', 'cat', 'whoami', 'clear', 'echo', 'man'];
+    
+    // Définitions des fichiers
     const files = {
         'equipe.txt': `
 Nom du Projet : Nuit de l'Apéro
@@ -66,32 +61,30 @@ Rôles : La Team "Nuit de l'Apéro" est là pour s'amuser et coder !
           Guide Complet de Navigation du Site
 ============================================================
 
-📚 PAGES DISPONIBLES:
-[🏠 home] (Accueil)
-   Commande: cd home
-   Commandes: help, ls, cat README.txt, cd about, cd projets, cd equipe, cd contact, cd chat
-...
+📚 COMMANDES DISPONIBLES:
+------------------------------------------------------------
+help (ou man) → Affiche ce manuel.
+ls            → Liste les fichiers et dossiers disponibles.
+cd [dossier]  → Change de dossier (ex: cd projets ou cd ..).
+cat [fichier] → Affiche le contenu d'un fichier (ex: cat README.txt).
+whoami        → Affiche votre nom d'utilisateur.
+clear         → Nettoie l'historique du terminal.
+echo [texte]  → Répète le texte entré.
+
+📂 DOSSIERS ACCESSIBLES (via 'cd'):
+------------------------------------------------------------
+home/      projets/      chat/      equipe/
+
+📝 FICHIERS ACCESSIBLES (via 'cat'):
+------------------------------------------------------------
+README.txt     equipe.txt
 `;
 
     // --- Fonctions de Logique ---
     
     useEffect(() => {
         setCommandHistory([`${LOGIN_NAME}@ubuntu:~/${currentPage}$ `, '']);
-        fetchPageInfo(currentPage); 
     }, [currentPage, userName]);
-
-    const fetchPageInfo = async (page) => {
-        try {
-            const res = await fetch(`${API_URL}/pages/${page}`);
-            if (res.ok) {
-                const data = await res.json();
-                setSuggestions(data.commands || []);
-            }
-        } catch (err) {
-            if (page === 'home') setSuggestions(['help', 'ls', 'cd about', 'cat README.txt']);
-            else setSuggestions(['help', 'ls', 'cd ..']);
-        }
-    };
 
     const openFile = (filename) => {
         if (files[filename]) {
@@ -99,6 +92,26 @@ Rôles : La Team "Nuit de l'Apéro" est là pour s'amuser et coder !
             setShowFileContent(true);
         } else {
             console.error(`Fichier non trouvé : ${filename}`);
+        }
+    };
+    
+    // Fonction Autocomplétion (inchangée)
+    const handleTabCompletion = (e) => {
+        if (e.key === 'Tab') {
+            e.preventDefault();
+            const parts = input.trim().split(/\s+/);
+            const lastPart = parts[parts.length - 1] || '';
+            const allTargets = [...availableCommands, ...Object.keys(pages).map(p => p + '/'), ...Object.keys(files)];
+
+            const matches = allTargets.filter(target => target.startsWith(lastPart));
+
+            if (matches.length === 1) {
+                const newCommand = parts.slice(0, -1).join(' ') + (parts.length > 1 ? ' ' : '') + matches[0] + ' ';
+                setInput(newCommand.trim());
+            } else if (matches.length > 1) {
+                setCommandHistory(prev => [...prev, `${LOGIN_NAME}@ubuntu:~/${currentPage}$ ${input.trim()}`]);
+                setCommandHistory(prev => [...prev, matches.join('   '), '']);
+            }
         }
     };
 
@@ -130,7 +143,6 @@ Rôles : La Team "Nuit de l'Apéro" est là pour s'amuser et coder !
         }
 
         if (cmd === 'ls') {
-            // NOTE: 'equipe.txt' sera listé ici
             let list = Object.keys(pages).map(p => p + '/').join('\n') + 
                          '\n' + 
                          Object.keys(files).join('\n');
@@ -142,12 +154,10 @@ Rôles : La Team "Nuit de l'Apéro" est là pour s'amuser et coder !
         if (cmd.startsWith('cat ')) {
             const filename = cmd.substring(4).trim();
             
-            // L'accès au contenu de equipe.txt se fait ici
             if (files[filename]) {
                 setCommandHistory(prev => [...prev, files[filename], '']);
-                // Ouvre la modale pour une meilleure lecture si c'est equipe.txt
-                if (filename === 'equipe.txt') {
-                    openFile('equipe.txt');
+                if (filename === 'equipe.txt' || filename === 'README.txt') {
+                    openFile(filename);
                 }
             } else {
                 setCommandHistory(prev => [...prev, `cat: ${filename}: Aucun fichier ou dossier`, '']);
@@ -165,6 +175,7 @@ Rôles : La Team "Nuit de l'Apéro" est là pour s'amuser et coder !
             }
             if (pages[target]) {
                 setCurrentPage(target);
+                // Le chat est géré comme une fenêtre full-screen, donc on ferme le terminal
                 if (target === 'chat') {
                     setShowTerminal(false);
                 }
@@ -192,32 +203,8 @@ Rôles : La Team "Nuit de l'Apéro" est là pour s'amuser et coder !
         }
     };
     
-    // ... (Reste des fonctions inchangées)
-
-    const sendChatMessage = async () => {
-        if (!chatInput.trim()) return;
-        const userMsg = chatInput;
-        setChatMessages(prev => [...prev, { 
-            type: 'user', 
-            text: userMsg,
-            author: userName, 
-            timestamp: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
-        }]);
-        setChatInput('');
-
-        setTimeout(() => {
-            setChatMessages(prev => [...prev, { 
-                type: 'assistant', 
-                text: `Salut ${userName} ! Je suis l'assistant de Nuit de l'Apéro. Que puis-je faire pour toi ?`,
-                author: 'Nuit de l\'Apéro',
-                timestamp: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
-            }]);
-        }, 500);
-    };
-
-    const handleSuggestionClick = (suggestion) => {
-        setInput(suggestion);
-    };
+    // Fonctions de chat (sendChatMessage, handleSuggestionClick) supprimées
+    // ...
 
     const openSettings = () => {
         setSettingsInput(userName);
@@ -233,11 +220,8 @@ Rôles : La Team "Nuit de l'Apéro" est là pour s'amuser et coder !
         terminalEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [commandHistory]);
 
-    useEffect(() => {
-        chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [chatMessages]);
 
-    // Rendu de la Barre de Titre GNOME (Réutilisable)
+    // Rendu de la Barre de Titre GNOME (Doit être définie ici si elle est utilisée dans les modales, ou exportée aussi)
     const GnomeTitleBar = ({ title, onClose }) => (
         <div className="flex-shrink-0 h-8 bg-gray-800 flex items-center justify-between px-2 border-b border-gray-700">
             <div className="flex space-x-2">
@@ -256,7 +240,14 @@ Rôles : La Team "Nuit de l'Apéro" est là pour s'amuser et coder !
 
     // --- Rendu des Modales Flottantes/Plein Écran ---
     
+    // Rendu du Chat (Maintenant avec le composant importé)
+    if (currentPage === 'chat' && !showTerminal) {
+        // Passe le userName et setCurrentPage au ChatScreen
+        return <ChatScreen userName={userName} setCurrentPage={setCurrentPage} />;
+    }
+
     if (showFileContent) {
+        // ... (Logique inchangée)
         return (
             <div className="w-screen h-screen flex items-center justify-center bg-gray-950/70 backdrop-blur-sm"> 
                 <div className="w-[80vw] h-[80vh] flex flex-col bg-gray-900 rounded-lg shadow-2xl overflow-hidden border border-gray-700">
@@ -275,6 +266,7 @@ Rôles : La Team "Nuit de l'Apéro" est là pour s'amuser et coder !
     }
     
     if (showSettings) {
+        // ... (Logique inchangée)
         return (
             <div className="absolute inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-70">
                 <div className="w-96 bg-gray-800 p-6 rounded-lg shadow-2xl border border-gray-700">
@@ -299,6 +291,7 @@ Rôles : La Team "Nuit de l'Apéro" est là pour s'amuser et coder !
     }
 
     if (showTerminal) {
+        // ... (Logique inchangée)
         return (
             <div className="w-screen h-screen flex items-center justify-center bg-gray-950/70 backdrop-blur-sm">
                 <div className="w-[80vw] h-[80vh] flex flex-col bg-gray-900 rounded-lg shadow-2xl overflow-hidden border border-gray-700">
@@ -316,22 +309,17 @@ Rôles : La Team "Nuit de l'Apéro" est là pour s'amuser et coder !
                             <div ref={terminalEndRef} />
                         </div>
 
-                        {suggestions.length > 0 && (
-                            <div className="bg-gray-900 p-3 border-t border-gray-800">
-                                <div className="text-xs text-purple-400 mb-2 font-mono">Available commands:</div>
-                                <div className="flex flex-wrap gap-2">
-                                    {suggestions.map((cmd, idx) => (
-                                        <button key={idx} onClick={() => handleSuggestionClick(cmd)} className="px-2 py-0.5 bg-gray-800 hover:bg-gray-700 border border-purple-600 rounded text-xs text-purple-400 transition cursor-pointer font-mono">
-                                            {cmd}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
                         <div className="bg-gray-900 p-3 border-t border-gray-800 flex items-center gap-2 font-mono">
                             <span className="text-green-400">{LOGIN_NAME}@ubuntu:~/{currentPage}$</span>
-                            <input type="text" value={input} onChange={(e) => setInput(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && executeCommand()} className="flex-1 bg-transparent outline-none text-green-400 text-sm font-mono" autoFocus />
+                            <input 
+                                type="text" 
+                                value={input} 
+                                onChange={(e) => setInput(e.target.value)} 
+                                onKeyPress={(e) => e.key === 'Enter' ? executeCommand() : handleTabCompletion(e)} 
+                                onKeyDown={handleTabCompletion} 
+                                className="flex-1 bg-transparent outline-none text-green-400 text-sm font-mono" 
+                                autoFocus 
+                            />
                         </div>
                     </div>
                 </div>
@@ -341,6 +329,7 @@ Rôles : La Team "Nuit de l'Apéro" est là pour s'amuser et coder !
 
 
     if (showManual) {
+        // ... (Logique inchangée)
         return (
             <div className="w-screen h-screen flex items-center justify-center bg-gray-950/70 backdrop-blur-sm">
                  <div className="w-[80vw] h-[80vh] flex flex-col bg-gray-900 rounded-lg shadow-2xl overflow-hidden border border-gray-700">
@@ -352,10 +341,10 @@ Rôles : La Team "Nuit de l'Apéro" est là pour s'amuser et coder !
                         <pre className="text-yellow-400 mb-4 font-bold text-lg">
                             {manualContent.split('\n').map((line, index) => {
                                 let coloredLine = line;
-                                if (line.includes('PAGES DISPONIBLES') || line.includes('COMMANDES GÉNÉRALES')) {
+                                if (line.includes('COMMANDES DISPONIBLES') || line.includes('DOSSIERS ACCESSIBLES') || line.includes('FICHIERS ACCESSIBLES')) {
                                     coloredLine = <span className="text-orange-400 font-bold">{line}</span>;
                                 } 
-                                else if (line.trim().startsWith('ls') || line.trim().startsWith('cd') || line.trim().startsWith('cat') || line.trim().startsWith('whoami') || line.trim().startsWith('help') || line.trim().startsWith('clear') || line.trim().startsWith('echo')) {
+                                else if (line.trim().startsWith('help') || line.trim().startsWith('ls') || line.trim().startsWith('cd') || line.trim().startsWith('cat') || line.trim().startsWith('whoami') || line.trim().startsWith('clear') || line.trim().startsWith('echo') || line.trim().startsWith('man')) {
                                     coloredLine = (
                                         <span>
                                             <span className="text-green-400">{line.split('→')[0]}</span>
@@ -371,43 +360,6 @@ Rôles : La Team "Nuit de l'Apéro" est là pour s'amuser et coder !
                         </pre>
                     </div>
                  </div>
-            </div>
-        );
-    }
-
-    if (currentPage === 'chat' && !showTerminal) {
-        return (
-            <div className="w-screen h-screen flex flex-col bg-gray-950">
-                 <div className="w-full h-full flex flex-col bg-gray-900 rounded-none shadow-2xl overflow-hidden border border-gray-700">
-                    <GnomeTitleBar 
-                        title="Chat - Nuit de l'Apéro"
-                        onClose={() => setCurrentPage('home')}
-                    />
-
-                    <div className="flex-1 flex flex-col overflow-hidden">
-                        <div className="flex-1 overflow-y-auto p-6 bg-gray-900 space-y-4">
-                            {chatMessages.map((msg, idx) => (
-                                <div key={idx} className="flex flex-col">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <span className={`font-bold text-sm ${msg.type === 'user' ? 'text-blue-400' : msg.type === 'error' ? 'text-red-400' : 'text-green-400'}`}>{msg.author}</span>
-                                        <span className="text-xs text-gray-500">{msg.timestamp}</span>
-                                    </div>
-                                    <div className={`px-4 py-2 rounded-lg max-w-2xl text-sm ${msg.type === 'user' ? 'bg-blue-600 text-white ml-auto' : msg.type === 'error' ? 'bg-red-600 text-white' : 'bg-gray-800 text-gray-100'}`}>
-                                        {msg.text}
-                                    </div>
-                                </div>
-                            ))}
-                            <div ref={chatEndRef} />
-                        </div>
-
-                        <div className="bg-gray-800 p-4 border-t border-gray-700 flex items-center gap-2">
-                            <input type="text" value={chatInput} onChange={(e) => setChatInput(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && sendChatMessage()} placeholder={`Message en tant que ${userName}...`} className="flex-1 bg-gray-700 outline-none text-white text-sm px-3 py-2 rounded border border-gray-600 placeholder-gray-500" autoFocus />
-                            <button onClick={sendChatMessage} className="p-2 bg-blue-600 hover:bg-blue-700 rounded text-white transition">
-                                <Send size={18} />
-                            </button>
-                        </div>
-                    </div>
-                </div>
             </div>
         );
     }
@@ -449,8 +401,6 @@ Rôles : La Team "Nuit de l'Apéro" est là pour s'amuser et coder !
                     <div onClick={() => handleDockClick(() => setCurrentPage('chat'))} className={`w-12 h-12 bg-gray-800 rounded-lg flex items-center justify-center hover:scale-110 transition cursor-pointer shadow-md p-1 border border-blue-400`}>
                         <MessageCircle size={24} className="text-blue-400" />
                     </div>
-
-                    {/* Team/Fichier equipe.txt - ICÔNE RETIRÉE DU DOCK */}
 
                     <div className="flex-1"></div>
                     
