@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Send, Terminal, BookOpen, MessageCircle, Users, User } from 'lucide-react'; 
+import { X, Send, Terminal, BookOpen, MessageCircle, User } from 'lucide-react'; 
 
 // CONSTANTE FIXE : Nom de l'équipe pour le prompt du Terminal
 const LOGIN_NAME = 'nuit-de-l-apero'; 
@@ -15,10 +15,10 @@ const UbuntuDesktop = () => {
     ]);
     const [input, setInput] = useState('');
     
-    // MODIFICATION ICI : Suppression de 'cat README.txt' des suggestions initiales
+    // Suggestions initiales allégées
     const [suggestions, setSuggestions] = useState(['help', 'ls', 'cd about']); 
     
-    // État de sécurité - DÉFINI ET FIXÉ À TRUE
+    // État de sécurité - DÉFINI ET FIXÉ À TRUE (Accès débloqué)
     const [isAccessGranted, setIsAccessGranted] = useState(true); 
 
     const [showTerminal, setShowTerminal] = useState(false);
@@ -50,7 +50,7 @@ const UbuntuDesktop = () => {
         equipe: { name: 'equipe', title: 'Équipe' }
     };
 
-    // Définitions des fichiers (avec README.txt)
+    // Définitions des fichiers (avec equipe.txt toujours présent)
     const files = {
         'equipe.txt': `
 Nom du Projet : Nuit de l'Apéro
@@ -88,8 +88,7 @@ Rôles : La Team "Nuit de l'Apéro" est là pour s'amuser et coder !
                 setSuggestions(data.commands || []);
             }
         } catch (err) {
-            // Logique de suggestion mise à jour
-            if (page === 'home') setSuggestions(['help', 'ls', 'cd about', 'cat README.txt']); // README.txt reste suggéré uniquement si l'API échoue.
+            if (page === 'home') setSuggestions(['help', 'ls', 'cd about', 'cat README.txt']);
             else setSuggestions(['help', 'ls', 'cd ..']);
         }
     };
@@ -131,6 +130,7 @@ Rôles : La Team "Nuit de l'Apéro" est là pour s'amuser et coder !
         }
 
         if (cmd === 'ls') {
+            // NOTE: 'equipe.txt' sera listé ici
             let list = Object.keys(pages).map(p => p + '/').join('\n') + 
                          '\n' + 
                          Object.keys(files).join('\n');
@@ -142,8 +142,13 @@ Rôles : La Team "Nuit de l'Apéro" est là pour s'amuser et coder !
         if (cmd.startsWith('cat ')) {
             const filename = cmd.substring(4).trim();
             
+            // L'accès au contenu de equipe.txt se fait ici
             if (files[filename]) {
                 setCommandHistory(prev => [...prev, files[filename], '']);
+                // Ouvre la modale pour une meilleure lecture si c'est equipe.txt
+                if (filename === 'equipe.txt') {
+                    openFile('equipe.txt');
+                }
             } else {
                 setCommandHistory(prev => [...prev, `cat: ${filename}: Aucun fichier ou dossier`, '']);
             }
@@ -445,10 +450,7 @@ Rôles : La Team "Nuit de l'Apéro" est là pour s'amuser et coder !
                         <MessageCircle size={24} className="text-blue-400" />
                     </div>
 
-                    {/* Team/Fichier equipe.txt */}
-                    <div onClick={() => handleDockClick(() => openFile('equipe.txt'))} className={`w-12 h-12 bg-gray-800 rounded-lg flex items-center justify-center hover:scale-110 transition cursor-pointer shadow-md p-1 border border-green-400`}>
-                        <Users size={24} className="text-green-400" />
-                    </div>
+                    {/* Team/Fichier equipe.txt - ICÔNE RETIRÉE DU DOCK */}
 
                     <div className="flex-1"></div>
                     
