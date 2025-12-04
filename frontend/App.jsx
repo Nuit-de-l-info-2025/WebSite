@@ -25,7 +25,12 @@ const UbuntuDesktop = () => {
     const [userName, setUserName] = useState('maelh'); 
     const [settingsInput, setSettingsInput] = useState('maelh'); 
     
-    // États du Chat supprimés d'ici : chatMessages, chatInput, chatEndRef
+    // NOUVEAUX ÉTATS D'ACCESSIBILITÉ AJOUTÉS
+    const [fontSize, setFontSize] = useState('normal'); 
+    const [highContrast, setHighContrast] = useState(false);
+    const [systemSounds, setSystemSounds] = useState(true); 
+    const [reducedMotion, setReducedMotion] = useState(false); 
+    const [largeCursor, setLargeCursor] = useState(false);
     
     const terminalEndRef = useRef(null);
     
@@ -266,24 +271,128 @@ README.txt     equipe.txt
     }
     
     if (showSettings) {
-        // ... (Logique inchangée)
         return (
             <div className="absolute inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-70">
-                <div className="w-96 bg-gray-800 p-6 rounded-lg shadow-2xl border border-gray-700">
-                    <h2 className="text-xl font-bold text-white mb-4 flex items-center"><User size={20} className="mr-2 text-yellow-400" /> Paramètres Utilisateur</h2>
-                    <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-400 mb-1">Nom d'affichage (Chat/Barre du haut)</label>
-                        <input
-                            type="text"
-                            value={settingsInput}
-                            onChange={(e) => setSettingsInput(e.target.value)}
-                            className="w-full bg-gray-700 text-white px-3 py-2 rounded border border-gray-600 focus:ring-purple-500 focus:border-purple-500"
-                        />
-                         <p className="text-xs text-gray-500 mt-1">Le prompt du terminal restera `{LOGIN_NAME}@ubuntu`.</p>
+                <div className="w-[500px] bg-gray-800 p-6 rounded-lg shadow-2xl border border-gray-700 max-h-[90vh] overflow-y-auto">
+                    <h2 className="text-xl font-bold text-white mb-6 flex items-center">
+                        <User size={20} className="mr-2 text-yellow-400" /> Paramètres d'Accessibilité
+                    </h2>
+                    
+                    {/* Section Utilisateur */}
+                    <div className="mb-6 pb-4 border-b border-gray-700">
+                        <h3 className="text-sm font-semibold text-gray-300 mb-2">Utilisateur</h3>
+                        <div className="flex items-center justify-between bg-gray-700 px-3 py-2 rounded">
+                            <span className="text-gray-400 text-sm">Nom d'affichage:</span>
+                            <span className="text-white font-medium">{userName}</span>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1">Identifiant terminal: {LOGIN_NAME}@ubuntu</p>
                     </div>
-                    <div className="flex justify-end space-x-2">
-                        <button onClick={() => setShowSettings(false)} className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-500 transition">Annuler</button>
-                        <button onClick={saveSettings} className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition">Sauvegarder</button>
+
+                    {/* Section Accessibilité */}
+                    <div className="space-y-4 mb-6">
+                        <h3 className="text-sm font-semibold text-gray-300 mb-3">Options d'Accessibilité</h3>
+                        
+                        {/* Taille du texte */}
+                        <div>
+                            <label className="block text-sm text-gray-400 mb-2">Taille du texte du terminal</label>
+                            <div className="flex items-center gap-2">
+                                <button 
+                                    onClick={() => setFontSize('small')}
+                                    className={`px-3 py-1 text-white text-xs rounded transition ${fontSize === 'small' ? 'bg-purple-600' : 'bg-gray-700 hover:bg-gray-600'}`}
+                                >
+                                    Petit
+                                </button>
+                                <button 
+                                    onClick={() => setFontSize('normal')}
+                                    className={`px-3 py-1 text-white text-xs rounded transition ${fontSize === 'normal' ? 'bg-purple-600' : 'bg-gray-700 hover:bg-gray-600'}`}
+                                >
+                                    Normal
+                                </button>
+                                <button 
+                                    onClick={() => setFontSize('large')}
+                                    className={`px-3 py-1 text-white text-xs rounded transition ${fontSize === 'large' ? 'bg-purple-600' : 'bg-gray-700 hover:bg-gray-600'}`}
+                                >
+                                    Grand
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Contraste élevé */}
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <label className="block text-sm text-gray-400">Contraste élevé</label>
+                                <p className="text-xs text-gray-500">Améliore la lisibilité</p>
+                            </div>
+                            <label className="relative inline-flex items-center cursor-pointer">
+                                <input 
+                                    type="checkbox" 
+                                    checked={highContrast}
+                                    onChange={(e) => setHighContrast(e.target.checked)}
+                                    className="sr-only peer" 
+                                />
+                                <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-purple-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                            </label>
+                        </div>
+
+                        {/* Sons */}
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <label className="block text-sm text-gray-400">Sons du système</label>
+                                <p className="text-xs text-gray-500">Notifications sonores</p>
+                            </div>
+                            <label className="relative inline-flex items-center cursor-pointer">
+                                <input 
+                                    type="checkbox" 
+                                    checked={systemSounds}
+                                    onChange={(e) => setSystemSounds(e.target.checked)}
+                                    className="sr-only peer" 
+                                />
+                                <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-purple-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                            </label>
+                        </div>
+
+                        {/* Animations */}
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <label className="block text-sm text-gray-400">Animations réduites</label>
+                                <p className="text-xs text-gray-500">Réduit les mouvements</p>
+                            </div>
+                            <label className="relative inline-flex items-center cursor-pointer">
+                                <input 
+                                    type="checkbox" 
+                                    checked={reducedMotion}
+                                    onChange={(e) => setReducedMotion(e.target.checked)}
+                                    className="sr-only peer" 
+                                />
+                                <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-purple-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                            </label>
+                        </div>
+
+                        {/* Curseur agrandi */}
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <label className="block text-sm text-gray-400">Curseur agrandi</label>
+                                <p className="text-xs text-gray-500">Plus facile à repérer</p>
+                            </div>
+                            <label className="relative inline-flex items-center cursor-pointer">
+                                <input 
+                                    type="checkbox" 
+                                    checked={largeCursor}
+                                    onChange={(e) => setLargeCursor(e.target.checked)}
+                                    className="sr-only peer" 
+                                />
+                                <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-purple-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div className="flex justify-end">
+                        <button 
+                            onClick={() => setShowSettings(false)} 
+                            className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition"
+                        >
+                            Fermer
+                        </button>
                     </div>
                 </div>
             </div>
@@ -291,7 +400,11 @@ README.txt     equipe.txt
     }
 
     if (showTerminal) {
-        // ... (Logique inchangée)
+        // Définition des classes en fonction des états d'accessibilité
+        const terminalBgClass = highContrast ? 'bg-slate-900' : 'bg-slate-800';
+        const terminalTextClass = highContrast ? 'text-yellow-300' : 'text-green-400';
+        const terminalFontSizeClass = fontSize === 'small' ? 'text-xs' : fontSize === 'large' ? 'text-lg' : 'text-sm';
+        
         return (
             <div className="w-screen h-screen flex items-center justify-center bg-gray-950/70 backdrop-blur-sm">
                 <div className="w-[80vw] h-[80vh] flex flex-col bg-gray-900 rounded-lg shadow-2xl overflow-hidden border border-gray-700">
@@ -301,8 +414,8 @@ README.txt     equipe.txt
                         onClose={() => setShowTerminal(false)}
                     />
 
-                    <div className="flex-1 flex flex-col overflow-hidden bg-gray-950">
-                        <div className="flex-1 overflow-y-auto p-4 bg-gray-950 text-green-400 font-mono text-sm leading-relaxed">
+                    <div className={`flex-1 flex flex-col overflow-hidden ${terminalBgClass}`}>
+                        <div className={`flex-1 overflow-y-auto p-4 font-mono leading-relaxed ${terminalBgClass} ${terminalTextClass} ${terminalFontSizeClass}`}>
                             {commandHistory.map((line, idx) => (
                                 <div key={idx} className="whitespace-pre-wrap break-all">{line}</div>
                             ))}
@@ -310,14 +423,14 @@ README.txt     equipe.txt
                         </div>
 
                         <div className="bg-gray-900 p-3 border-t border-gray-800 flex items-center gap-2 font-mono">
-                            <span className="text-green-400">{LOGIN_NAME}@ubuntu:~/{currentPage}$</span>
+                            <span className={terminalTextClass}>{LOGIN_NAME}@ubuntu:~/{currentPage}$</span>
                             <input 
                                 type="text" 
                                 value={input} 
                                 onChange={(e) => setInput(e.target.value)} 
                                 onKeyPress={(e) => e.key === 'Enter' ? executeCommand() : handleTabCompletion(e)} 
                                 onKeyDown={handleTabCompletion} 
-                                className="flex-1 bg-transparent outline-none text-green-400 text-sm font-mono" 
+                                className={`flex-1 bg-transparent outline-none font-mono ${terminalTextClass} ${terminalFontSizeClass}`} 
                                 autoFocus 
                             />
                         </div>
@@ -368,9 +481,13 @@ README.txt     equipe.txt
     const handleDockClick = (action) => {
         action();
     };
+    
+    // Définition de la classe pour réduire les animations ou non
+    const transitionClass = reducedMotion ? '' : 'transition';
 
     return (
-        <div className="w-screen h-screen overflow-hidden flex flex-col" style={{ backgroundImage: 'url(/fond_ecran.png)', backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat', backgroundAttachment: 'fixed' }}>
+        // Application du style de curseur agrandi (largeCursor)
+        <div className={`w-screen h-screen overflow-hidden flex flex-col ${largeCursor ? 'cursor-crosshair' : ''}`} style={{ backgroundImage: 'url(/fond_ecran.png)', backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat', backgroundAttachment: 'fixed' }}>
             {/* Barre Supérieure (Top Bar) */}
             <div className="bg-gray-950 bg-opacity-95 h-10 flex items-center px-4 shadow-lg border-b border-gray-800">
                 <div className="text-white text-sm font-semibold">Activities</div>
@@ -388,24 +505,24 @@ README.txt     equipe.txt
                 <div className="w-20 bg-gray-950 bg-opacity-95 flex flex-col items-center py-4 gap-4 border-r border-gray-800 shadow-lg">
                     
                     {/* Terminal */}
-                    <div onClick={() => handleDockClick(() => setShowTerminal(true))} className={`w-12 h-12 bg-black rounded-lg flex items-center justify-center hover:scale-110 transition cursor-pointer shadow-md p-1 border overflow-hidden border-purple-600`}>
+                    <div onClick={() => handleDockClick(() => setShowTerminal(true))} className={`w-12 h-12 bg-black rounded-lg flex items-center justify-center hover:scale-110 ${transitionClass} cursor-pointer shadow-md p-1 border overflow-hidden border-purple-600`}>
                         <img src="/logo.png" alt="Terminal" className="w-full h-full object-cover rounded" />
                     </div>
 
                     {/* Manuel (HELP) */}
-                    <div onClick={() => handleDockClick(() => setShowManual(true))} className={`w-12 h-12 bg-gray-800 rounded-lg flex items-center justify-center hover:scale-110 transition cursor-pointer shadow-md p-1 border border-yellow-500`}>
+                    <div onClick={() => handleDockClick(() => setShowManual(true))} className={`w-12 h-12 bg-gray-800 rounded-lg flex items-center justify-center hover:scale-110 ${transitionClass} cursor-pointer shadow-md p-1 border border-yellow-500`}>
                         <BookOpen size={24} className="text-yellow-400" />
                     </div>
 
                     {/* Chat */}
-                    <div onClick={() => handleDockClick(() => setCurrentPage('chat'))} className={`w-12 h-12 bg-gray-800 rounded-lg flex items-center justify-center hover:scale-110 transition cursor-pointer shadow-md p-1 border border-blue-400`}>
+                    <div onClick={() => handleDockClick(() => setCurrentPage('chat'))} className={`w-12 h-12 bg-gray-800 rounded-lg flex items-center justify-center hover:scale-110 ${transitionClass} cursor-pointer shadow-md p-1 border border-blue-400`}>
                         <MessageCircle size={24} className="text-blue-400" />
                     </div>
 
                     <div className="flex-1"></div>
                     
                     {/* Icône de Paramètres (Utilisateur) - TOUJOURS ACCESSIBLE */}
-                    <div onClick={openSettings} className="w-12 h-12 bg-gray-800 rounded-lg flex items-center justify-center hover:scale-110 transition cursor-pointer shadow-md p-1 mb-4">
+                    <div onClick={openSettings} className="w-12 h-12 bg-gray-800 rounded-lg flex items-center justify-center hover:scale-110 ${transitionClass} cursor-pointer shadow-md p-1 mb-4">
                          <User size={24} className="text-gray-400" />
                     </div>
                 </div>
