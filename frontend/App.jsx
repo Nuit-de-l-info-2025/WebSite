@@ -1,11 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { X, BookOpen, MessageCircle, User } from 'lucide-react'; 
 // IMPORT DU NOUVEAU COMPOSANT CHAT
-import ChatScreen from './ChatScreen'; // Assurez-vous que le chemin d'accès est correct
+import ChatScreen from './ChatScreen'; 
+// NOUVEL IMPORT POUR LA PAGE DE PARAMÈTRES
+import AccessibilitySettings from './AccessibilitySettings'; 
 
 // CONSTANTE FIXE : Nom de l'équipe pour le prompt du Terminal
 const LOGIN_NAME = 'nuit-de-l-apero'; 
-// COMMANDE CACHÉE (maintenue pour la démo, mais n'a plus d'effet)
 const SECRET_COMMAND = 'login hack';
 
 const UbuntuDesktop = () => {
@@ -21,11 +22,12 @@ const UbuntuDesktop = () => {
 
     const [showTerminal, setShowTerminal] = useState(false);
     const [showManual, setShowManual] = useState(false);
+    // L'état est conservé pour contrôler l'affichage
     const [showSettings, setShowSettings] = useState(false);
     const [userName, setUserName] = useState('maelh'); 
     const [settingsInput, setSettingsInput] = useState('maelh'); 
     
-    // NOUVEAUX ÉTATS D'ACCESSIBILITÉ AJOUTÉS
+    // NOUVEAUX ÉTATS D'ACCESSIBILITÉ
     const [fontSize, setFontSize] = useState('normal'); 
     const [highContrast, setHighContrast] = useState(false);
     const [systemSounds, setSystemSounds] = useState(true); 
@@ -47,10 +49,10 @@ const UbuntuDesktop = () => {
         equipe: { name: 'equipe', title: 'Équipe' }
     };
 
-    // Liste complète des commandes (utilisée pour l'auto-complétion)
+    // ... (Reste des définitions de commandes et fichiers - Inchangé)
+
     const availableCommands = ['help', 'ls', 'cd', 'cat', 'whoami', 'clear', 'echo', 'man'];
     
-    // Définitions des fichiers
     const files = {
         'equipe.txt': `
 Nom du Projet : Nuit de l'Apéro
@@ -100,7 +102,7 @@ README.txt     equipe.txt
         }
     };
     
-    // Fonction Autocomplétion (inchangée)
+    // Fonction Autocomplétion (Inchangée)
     const handleTabCompletion = (e) => {
         if (e.key === 'Tab') {
             e.preventDefault();
@@ -127,6 +129,8 @@ README.txt     equipe.txt
         setCommandHistory(prev => [...prev, `${LOGIN_NAME}@ubuntu:~/${currentPage}$ ${cmd}`]);
         setInput('');
         
+        // ... (Logique executeCommand - Inchagée)
+
         if (cmd === SECRET_COMMAND) {
             setCommandHistory(prev => [
                 ...prev, 
@@ -180,7 +184,6 @@ README.txt     equipe.txt
             }
             if (pages[target]) {
                 setCurrentPage(target);
-                // Le chat est géré comme une fenêtre full-screen, donc on ferme le terminal
                 if (target === 'chat') {
                     setShowTerminal(false);
                 }
@@ -208,9 +211,6 @@ README.txt     equipe.txt
         }
     };
     
-    // Fonctions de chat (sendChatMessage, handleSuggestionClick) supprimées
-    // ...
-
     const openSettings = () => {
         setSettingsInput(userName);
         setShowSettings(true);
@@ -218,7 +218,8 @@ README.txt     equipe.txt
 
     const saveSettings = () => {
         setUserName(settingsInput.trim() || 'user');
-        setShowSettings(false);
+        // Cette fonction n'est plus nécessaire car les changements sont appliqués immédiatement
+        // setShowSettings(false);
     }
     
     useEffect(() => {
@@ -226,7 +227,7 @@ README.txt     equipe.txt
     }, [commandHistory]);
 
 
-    // Rendu de la Barre de Titre GNOME (Doit être définie ici si elle est utilisée dans les modales, ou exportée aussi)
+    // Rendu de la Barre de Titre GNOME (DOIT RESTER ICI ou être importé/exporté correctement)
     const GnomeTitleBar = ({ title, onClose }) => (
         <div className="flex-shrink-0 h-8 bg-gray-800 flex items-center justify-between px-2 border-b border-gray-700">
             <div className="flex space-x-2">
@@ -247,12 +248,11 @@ README.txt     equipe.txt
     
     // Rendu du Chat (Maintenant avec le composant importé)
     if (currentPage === 'chat' && !showTerminal) {
-        // Passe le userName et setCurrentPage au ChatScreen
         return <ChatScreen userName={userName} setCurrentPage={setCurrentPage} />;
     }
 
     if (showFileContent) {
-        // ... (Logique inchangée)
+        // ... (Logique inchangée pour showFileContent)
         return (
             <div className="w-screen h-screen flex items-center justify-center bg-gray-950/70 backdrop-blur-sm"> 
                 <div className="w-[80vw] h-[80vh] flex flex-col bg-gray-900 rounded-lg shadow-2xl overflow-hidden border border-gray-700">
@@ -270,139 +270,12 @@ README.txt     equipe.txt
         );
     }
     
-    if (showSettings) {
-        return (
-            <div className="absolute inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-70">
-                <div className="w-[500px] bg-gray-800 p-6 rounded-lg shadow-2xl border border-gray-700 max-h-[90vh] overflow-y-auto">
-                    <h2 className="text-xl font-bold text-white mb-6 flex items-center">
-                        <User size={20} className="mr-2 text-yellow-400" /> Paramètres d'Accessibilité
-                    </h2>
-                    
-                    {/* Section Utilisateur */}
-                    <div className="mb-6 pb-4 border-b border-gray-700">
-                        <h3 className="text-sm font-semibold text-gray-300 mb-2">Utilisateur</h3>
-                        <div className="flex items-center justify-between bg-gray-700 px-3 py-2 rounded">
-                            <span className="text-gray-400 text-sm">Nom d'affichage:</span>
-                            <span className="text-white font-medium">{userName}</span>
-                        </div>
-                        <p className="text-xs text-gray-500 mt-1">Identifiant terminal: {LOGIN_NAME}@ubuntu</p>
-                    </div>
-
-                    {/* Section Accessibilité */}
-                    <div className="space-y-4 mb-6">
-                        <h3 className="text-sm font-semibold text-gray-300 mb-3">Options d'Accessibilité</h3>
-                        
-                        {/* Taille du texte */}
-                        <div>
-                            <label className="block text-sm text-gray-400 mb-2">Taille du texte du terminal</label>
-                            <div className="flex items-center gap-2">
-                                <button 
-                                    onClick={() => setFontSize('small')}
-                                    className={`px-3 py-1 text-white text-xs rounded transition ${fontSize === 'small' ? 'bg-purple-600' : 'bg-gray-700 hover:bg-gray-600'}`}
-                                >
-                                    Petit
-                                </button>
-                                <button 
-                                    onClick={() => setFontSize('normal')}
-                                    className={`px-3 py-1 text-white text-xs rounded transition ${fontSize === 'normal' ? 'bg-purple-600' : 'bg-gray-700 hover:bg-gray-600'}`}
-                                >
-                                    Normal
-                                </button>
-                                <button 
-                                    onClick={() => setFontSize('large')}
-                                    className={`px-3 py-1 text-white text-xs rounded transition ${fontSize === 'large' ? 'bg-purple-600' : 'bg-gray-700 hover:bg-gray-600'}`}
-                                >
-                                    Grand
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* Contraste élevé */}
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <label className="block text-sm text-gray-400">Contraste élevé</label>
-                                <p className="text-xs text-gray-500">Améliore la lisibilité</p>
-                            </div>
-                            <label className="relative inline-flex items-center cursor-pointer">
-                                <input 
-                                    type="checkbox" 
-                                    checked={highContrast}
-                                    onChange={(e) => setHighContrast(e.target.checked)}
-                                    className="sr-only peer" 
-                                />
-                                <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-purple-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
-                            </label>
-                        </div>
-
-                        {/* Sons */}
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <label className="block text-sm text-gray-400">Sons du système</label>
-                                <p className="text-xs text-gray-500">Notifications sonores</p>
-                            </div>
-                            <label className="relative inline-flex items-center cursor-pointer">
-                                <input 
-                                    type="checkbox" 
-                                    checked={systemSounds}
-                                    onChange={(e) => setSystemSounds(e.target.checked)}
-                                    className="sr-only peer" 
-                                />
-                                <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-purple-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
-                            </label>
-                        </div>
-
-                        {/* Animations */}
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <label className="block text-sm text-gray-400">Animations réduites</label>
-                                <p className="text-xs text-gray-500">Réduit les mouvements</p>
-                            </div>
-                            <label className="relative inline-flex items-center cursor-pointer">
-                                <input 
-                                    type="checkbox" 
-                                    checked={reducedMotion}
-                                    onChange={(e) => setReducedMotion(e.target.checked)}
-                                    className="sr-only peer" 
-                                />
-                                <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-purple-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
-                            </label>
-                        </div>
-
-                        {/* Curseur agrandi */}
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <label className="block text-sm text-gray-400">Curseur agrandi</label>
-                                <p className="text-xs text-gray-500">Plus facile à repérer</p>
-                            </div>
-                            <label className="relative inline-flex items-center cursor-pointer">
-                                <input 
-                                    type="checkbox" 
-                                    checked={largeCursor}
-                                    onChange={(e) => setLargeCursor(e.target.checked)}
-                                    className="sr-only peer" 
-                                />
-                                <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-purple-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
-                            </label>
-                        </div>
-                    </div>
-
-                    <div className="flex justify-end">
-                        <button 
-                            onClick={() => setShowSettings(false)} 
-                            className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition"
-                        >
-                            Fermer
-                        </button>
-                    </div>
-                </div>
-            </div>
-        );
-    }
+    // LE BLOC if (showSettings) A ÉTÉ SUPPRIMÉ ET REMPLACÉ PAR L'APPEL AU COMPOSANT AccessibilitySettings À LA FIN
 
     if (showTerminal) {
-        // Définition des classes en fonction des états d'accessibilité
-        const terminalBgClass = highContrast ? 'bg-slate-900' : 'bg-slate-800';
-        const terminalTextClass = highContrast ? 'text-yellow-300' : 'text-green-400';
+        // Définition des classes en fonction des états d'accessibilité (Inchangé)
+        const terminalBgClass = highContrast ? 'bg-black' : 'bg-gray-950';
+        const terminalTextClass = highContrast ? 'text-lime-400' : 'text-green-400';
         const terminalFontSizeClass = fontSize === 'small' ? 'text-xs' : fontSize === 'large' ? 'text-lg' : 'text-sm';
         
         return (
@@ -442,7 +315,7 @@ README.txt     equipe.txt
 
 
     if (showManual) {
-        // ... (Logique inchangée)
+        // ... (Logique inchangée pour showManual)
         return (
             <div className="w-screen h-screen flex items-center justify-center bg-gray-950/70 backdrop-blur-sm">
                  <div className="w-[80vw] h-[80vh] flex flex-col bg-gray-900 rounded-lg shadow-2xl overflow-hidden border border-gray-700">
@@ -488,7 +361,7 @@ README.txt     equipe.txt
     return (
         // Application du style de curseur agrandi (largeCursor)
         <div className={`w-screen h-screen overflow-hidden flex flex-col ${largeCursor ? 'cursor-crosshair' : ''}`} style={{ backgroundImage: 'url(/fond_ecran.png)', backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat', backgroundAttachment: 'fixed' }}>
-            {/* Barre Supérieure (Top Bar) */}
+            {/* Barre Supérieure (Top Bar) - Inchangée */}
             <div className="bg-gray-950 bg-opacity-95 h-10 flex items-center px-4 shadow-lg border-b border-gray-800">
                 <div className="text-white text-sm font-semibold">Activities</div>
                 <div className="flex-1 flex justify-center">
@@ -501,7 +374,7 @@ README.txt     equipe.txt
             </div>
 
             <div className="flex flex-1 overflow-hidden">
-                {/* Dock / Lanceur d'Applications (Gauche) */}
+                {/* Dock / Lanceur d'Applications (Gauche) - Inchangé */}
                 <div className="w-20 bg-gray-950 bg-opacity-95 flex flex-col items-center py-4 gap-4 border-r border-gray-800 shadow-lg">
                     
                     {/* Terminal */}
@@ -522,7 +395,7 @@ README.txt     equipe.txt
                     <div className="flex-1"></div>
                     
                     {/* Icône de Paramètres (Utilisateur) - TOUJOURS ACCESSIBLE */}
-                    <div onClick={openSettings} className="w-12 h-12 bg-gray-800 rounded-lg flex items-center justify-center hover:scale-110 ${transitionClass} cursor-pointer shadow-md p-1 mb-4">
+                    <div onClick={openSettings} className={`w-12 h-12 bg-gray-800 rounded-lg flex items-center justify-center hover:scale-110 ${transitionClass} cursor-pointer shadow-md p-1 mb-4`}>
                          <User size={24} className="text-gray-400" />
                     </div>
                 </div>
@@ -532,6 +405,23 @@ README.txt     equipe.txt
                     {/* Le bureau reste vide, la navigation se fait par le Terminal ou les modales. */}
                 </div>
             </div>
+            
+            {/* 3. Intégration du composant de paramètres séparé ici, à la fin du rendu */}
+            <AccessibilitySettings
+                userName={userName}
+                showSettings={showSettings}
+                setShowSettings={setShowSettings}
+                fontSize={fontSize}
+                setFontSize={setFontSize}
+                highContrast={highContrast}
+                setHighContrast={setHighContrast}
+                systemSounds={systemSounds}
+                setSystemSounds={setSystemSounds}
+                reducedMotion={reducedMotion}
+                setReducedMotion={setReducedMotion}
+                largeCursor={largeCursor}
+                setLargeCursor={setLargeCursor}
+            />
         </div>
     );
 };
