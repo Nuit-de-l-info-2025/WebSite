@@ -83,23 +83,6 @@ L'application est entièrement responsive et s'adapte à tous les écrans :
 7. Lieu d'entraînement (multi)
 8. Auto-évaluation posturale
 
-## 🔧 Personnalisation
-
-### Ajouter des questions
-Éditez `js/data.js` et ajoutez une nouvelle question dans `QUIZ_QUESTIONS`.
-
-### Modifier les exercices
-Éditez la fonction `analyzeProfile()` dans `js/analyzer.js`.
-
-### Changer les couleurs
-Modifiez les variables CSS dans `css/style.css` :
-```css
-:root {
-    --color-primary: #0082C3;
-    --color-cyan: #06b6d4;
-    /* ... */
-}
-```
 
 
 <div align="center">
