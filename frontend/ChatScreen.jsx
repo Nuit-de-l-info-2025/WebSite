@@ -1,13 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { X, Send, Smile, User } from 'lucide-react'; 
 
-// --- BASE DE DONNÉES MASSIVE POUR GÉNÉRER DES DIZAINES DE MILLIERS DE COMBINAISONS ---
-
+// --- BASE DE DONNÉES MASSIVE ---
 const PAYSAN_BANK = {
-    // 1. Démarrage de la phrase (Le sujet principal)
-    // *** AUGMENTATION DE LA DIVERSITÉ DES SUJETS DE DÉPART ***
     subjects: [
-        // Général & Tech
         "Ton affaire de logiciel là,",
         "C'te bidouille d'internet,",
         "La question que tu me poses,",
@@ -18,7 +14,6 @@ const PAYSAN_BANK = {
         "J'ai la même chose quand",
         "Le temps de séchage du bois de chauffage,",
         "La dernière fois qu'on a vu la lune rousse,",
-        // Nouveaux sujets
         "Le moulin à vent du grand-père,",
         "La vieille radio dans la grange,",
         "L'odeur du purin frais,",
@@ -35,7 +30,6 @@ const PAYSAN_BANK = {
         "La couleur du ciel après l'orage,",
         "Les outils oubliés dans la boue,",
     ],
-    // 2. Le verbe ou la comparaison paysanne loufoque
     comparisons: [
         "a la même utilité que",
         "est aussi embrouillé que",
@@ -58,7 +52,6 @@ const PAYSAN_BANK = {
         "ça sent le roussi comme",
         "ça coule sans s'arrêter comme",
     ],
-    // 3. Les objets ou situations rustiques et décalées
     objects: [
         "le foin quand il est mouillé après la grêle. ⛈️",
         "le chemin de la ferme après trois jours de pluie diluvienne. 🌧️",
@@ -77,7 +70,6 @@ const PAYSAN_BANK = {
         "la vieille charrue qui roule toute seule dans le champ. 🛒",
         "un champ de navets où tous les navets ont disparu. 🥕",
         "le vieux chien qui essaie de rattraper sa queue. 🐕",
-        // L'élément répétitif que vous avez mentionné est ici.
         "le pain rassis oublié derrière le poêle. 🍞", 
         "le filet de pêche plein de vieilles chaussettes. 🎣",
         "la roue du vélo qui tourne dans le vide. 🚲",
@@ -86,12 +78,10 @@ const PAYSAN_BANK = {
         "la confiture de coing qui a collé au fond de la casserole. 🍯",
         "une porte de grange qui grince depuis 10 ans. 🚪",
     ],
-    // 4. La conclusion/morale (l'élément final qui rend la phrase unique)
     conclusions: [
         "Et puis, l'essentiel, c'est d'avoir de bonnes pommes de terre. 🥔",
         "Moi, je dis qu'il faut en parler au cochon, il comprendra mieux. 🐷",
         "Enfin, je crois. J'ai peut-être bu un coup de trop ce midi. 🍷",
-        // L'élément répétitif que vous avez mentionné est ici.
         "Alors, on ferait mieux d'aller voir si les œufs sont frais, hein. 🍳", 
         "Ce qui nous ramène au prix du gazole. Ça, c'est un vrai problème. ⛽",
         "Faut laisser le temps au temps, comme le vin qui fermente. 🍇",
@@ -106,7 +96,6 @@ const PAYSAN_BANK = {
         "Il faudrait d'abord trouver le marteau que j'ai perdu en 95. Ça, c'est important. 🔨",
         "Le facteur, lui, il s'est jamais perdu avec ça. ✉️",
     ],
-    // 5. Réponses complètes (pour plus de variation dans la structure) - Mode aléatoire
     full_sentences: [
         "J'ai pas le temps, j'ai les salades qui attendent au jardin. On reparle de tout ça après la récolte. 🥬",
         "Je suis désolé mon gars, mais j'étais en train de caresser les vaches. J'ai pas bien écouté. C'était quoi déjà la question ? 🐄",
@@ -121,10 +110,7 @@ const PAYSAN_BANK = {
         "Les oies sont en train de marcher en ligne droite. Ça, c'est un signe. Fais comme elles. 🦢",
         "Le fait est que mon chat dort sur le clavier. On en reparle après sa sieste. 🐈‍⬛",
     ],
-    
-    // --- NOUVELLE SECTION POUR LA LOGIQUE (MOTS-CLÉS) ---
     keyword_responses: {
-        // Mots-clés informatiques/techniques
         code: [
             "Le code ? Ça, c'est le truc que j'ai mis sur le portail pour que les chèvres n'ouvrent pas. Le tien doit être aussi solide. 🐐",
             "Ton 'code' est cassé ? Essaie de le taper plus fort sur la table, des fois ça marche avec le tracteur. 🚜",
@@ -149,7 +135,6 @@ const PAYSAN_BANK = {
             "De l'aide ? Tu cherches l'aiguille dans la botte de foin. Moi, je te propose un bon apéro, c'est plus efficace. 🍷",
             "T'aider ? J'ai déjà essayé de débloquer le chien coincé dans le tonneau. J'ai perdu une journée. Explique-toi mieux. 🐕",
         ],
-        // Mots-clés émotionnels/simples
         faim: [
             "Tu as faim ? Arrête de penser à ton 'serveur' et mange une bonne soupe aux légumes ! La vraie logique, c'est l'estomac ! 🍲",
             "Moi, j'ai tout le temps faim. Mais ça n'a jamais réglé un problème d'ordinateur. Va faire une sieste. 😴",
@@ -165,41 +150,72 @@ const PAYSAN_BANK = {
     }
 };
 
-// Fonction pour choisir aléatoirement dans un tableau
 const getRandomElement = (arr) => {
     return arr[Math.floor(Math.random() * arr.length)];
 };
 
-/**
- * Génère une réponse intelligente basée sur les mots-clés de l'utilisateur.
- * @param {string} userMessage Le message saisi par l'utilisateur.
- * @returns {string} Une réponse pertinente et décalée, ou une réponse totalement aléatoire si aucun mot-clé n'est trouvé.
- */
 const generateSmartLofoqueResponse = (userMessage) => {
     const messageLower = userMessage.toLowerCase();
-    const { keyword_responses } = PAYSAN_BANK;
+    const { keyword_responses, subjects, comparisons, objects, conclusions } = PAYSAN_BANK;
     
-    // 1. Recherche des mots-clés
+    // Extraire les mots clés du message utilisateur
+    const userWords = userMessage.split(' ').filter(word => word.length > 3);
+    
+    // Vérifier les keywords spécifiques
     for (const keyword in keyword_responses) {
         if (messageLower.includes(keyword)) {
-            // Un mot-clé a été trouvé, utiliser une des réponses associées
-            return getRandomElement(keyword_responses[keyword]);
+            // 70% de chance de réponse personnalisée, 30% de réponse random
+            if (Math.random() < 0.7) {
+                return generatePersonalizedResponse(userMessage);
+            } else {
+                return getRandomElement(keyword_responses[keyword]);
+            }
         }
     }
     
-    // 2. Si aucun mot-clé n'est trouvé, revenir à la réponse ultra-aléatoire
+    // Si pas de keyword spécifique, 80% personnalisé, 20% random
+    if (Math.random() < 0.8) {
+        return generatePersonalizedResponse(userMessage);
+    }
+    
     return generateMassiveLofoqueResponse();
 };
 
-// Fonction principale pour générer une réponse combinatoire ou complète (mode fumier)
+const generatePersonalizedResponse = (userMessage) => {
+    const { subjects, comparisons, objects, conclusions } = PAYSAN_BANK;
+    
+    // Créer une réponse qui fait référence au message de l'utilisateur
+    const references = [
+        `C'est vrai que tu dis ça, mais`,
+        `Ouais enfin, ce que tu racontes là,`,
+        `Ça me rappelle quand tu dis`,
+        `Bon, d'accord, mais`,
+        `Je comprends ce que tu veux dire, sauf que`,
+        `C'est malin ce que tu dis, mais`,
+        `En gros, ce que tu expliques,`,
+        `T'as pas tort de dire ça, mais`,
+    ];
+    
+    const transitions = [
+        `c'est ${getRandomElement(comparisons.filter(c => !c.includes('que')))} ${getRandomElement(objects)}`,
+        `ça me fait penser à ${getRandomElement(objects)}`,
+        `c'est aussi compliqué que ${getRandomElement(objects)}`,
+        `ça ressemble à ${getRandomElement(objects)}`,
+    ];
+    
+    const reference = getRandomElement(references);
+    const transition = getRandomElement(transitions);
+    const conclusion = getRandomElement(conclusions);
+    
+    return `${reference} ${transition}. ${conclusion}`;
+};
+
 const generateMassiveLofoqueResponse = () => {
     const { subjects, comparisons, objects, conclusions, full_sentences } = PAYSAN_BANK;
     
     if (Math.random() < 0.33) {
-        // Mode phrase complète
         return getRandomElement(full_sentences);
     } else {
-        // Mode combinatoire (avec plus de sujets)
         const subject = getRandomElement(subjects);
         const comparison = getRandomElement(comparisons);
         const object = getRandomElement(objects);
@@ -209,8 +225,7 @@ const generateMassiveLofoqueResponse = () => {
     }
 };
 
-// --- Composants (inchangés) ---
-
+// --- Composant de Barre de Titre ---
 const GnomeTitleBar = ({ title, onClose }) => (
     <div className="flex-shrink-0 h-8 bg-gray-800 flex items-center justify-between px-2 border-b border-gray-700">
         <div className="flex space-x-2">
@@ -227,6 +242,7 @@ const GnomeTitleBar = ({ title, onClose }) => (
     </div>
 );
 
+// --- Composant SÉLECTEUR D'EMOJIS ---
 const EmojiPicker = ({ onSelect }) => {
     const [isOpen, setIsOpen] = useState(false);
     
@@ -275,7 +291,6 @@ const EmojiPicker = ({ onSelect }) => {
 
 const ChatScreen = ({ userName, setCurrentPage }) => {
     
-    // Génération du premier message aléatoire
     const initialAssistantMessage = getRandomElement(PAYSAN_BANK.full_sentences);
 
     const [chatMessages, setChatMessages] = useState([
@@ -283,7 +298,9 @@ const ChatScreen = ({ userName, setCurrentPage }) => {
         { type: 'assistant', text: initialAssistantMessage, author: 'IA Paysanne', timestamp: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) }
     ]);
     const [chatInput, setChatInput] = useState('');
+    const [isUserTyping, setIsUserTyping] = useState(false);
     const chatEndRef = useRef(null);
+    const typingTimeoutRef = useRef(null);
 
     const handleEmojiSelect = (emoji) => {
         setChatInput(prev => prev + emoji);
@@ -347,7 +364,7 @@ const ChatScreen = ({ userName, setCurrentPage }) => {
                 />
 
                 <div className="flex-1 flex flex-col overflow-hidden">
-                    <div className="flex-1 overflow-y-auto p-6 bg-gray-900 space-y-4">
+                    <div className="flex-1 overflow-y-auto p-6 bg-gray-900 space-y-4 flex flex-col">
                         {chatMessages.map((msg, idx) => {
                             const isUser = msg.type === 'user';
                             const authorColor = isUser ? 'text-blue-400' : msg.type === 'error' ? 'text-red-400' : 'text-green-400';
@@ -355,22 +372,26 @@ const ChatScreen = ({ userName, setCurrentPage }) => {
                             return (
                                 <div 
                                     key={idx} 
-                                    // Aligné à gauche pour tous les messages
-                                    className={`flex flex-col max-w-2xl self-start items-start`}
+                                    className={`flex flex-col w-full ${isUser ? 'items-end' : 'items-start'}`}
                                 >
                                     
                                     {/* Auteur et Heure */}
-                                    <div className={`flex items-center gap-2 mb-1 flex-row`}>
+                                    <div className={`flex items-center gap-2 mb-1 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
                                         <span className={`font-bold text-sm ${authorColor}`}>{msg.author}</span>
                                         <span className="text-xs text-gray-500">{msg.timestamp}</span>
                                     </div>
                                     
                                     {/* Bulle de Message */}
-                                    <div className={`px-4 py-2 rounded-lg text-sm ${isUser ? 'bg-blue-600 text-white' : msg.type === 'error' ? 'bg-red-600 text-white' : 'bg-gray-800 text-gray-100'}`}>
+                                    <div className={`px-4 py-2 rounded-lg text-sm max-w-2xl ${isUser ? 'bg-blue-600 text-white' : msg.type === 'error' ? 'bg-red-600 text-white' : 'bg-gray-800 text-gray-100'}`}>
                                         {msg.isPlaceholder ? 
-                                            // Statut "en train de réfléchir..."
-                                            <span className="animate-pulse italic text-gray-500">
-                                                {msg.author} est en train de réfléchir...
+                                            // Statut "en train de réfléchir..." avec animation
+                                            <span className="flex items-center gap-1 italic text-gray-500">
+                                                {msg.author} est en train d'écrire
+                                                <span className="flex gap-0.5">
+                                                    <span className="w-1 h-1 bg-gray-500 rounded-full animate-bounce" style={{animationDelay: '0ms'}}></span>
+                                                    <span className="w-1 h-1 bg-gray-500 rounded-full animate-bounce" style={{animationDelay: '150ms'}}></span>
+                                                    <span className="w-1 h-1 bg-gray-500 rounded-full animate-bounce" style={{animationDelay: '300ms'}}></span>
+                                                </span>
                                             </span> 
                                             : 
                                             <span>{msg.text}</span>
@@ -379,6 +400,24 @@ const ChatScreen = ({ userName, setCurrentPage }) => {
                                 </div>
                             );
                         })}
+                        {isUserTyping && (
+                            <div className="flex flex-col w-full items-end">
+                                <div className="flex items-center gap-2 mb-1 flex-row-reverse">
+                                    <span className="font-bold text-sm text-blue-400">{userName}</span>
+                                    <span className="text-xs text-gray-500">{new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>
+                                </div>
+                                <div className="px-4 py-2 rounded-lg text-sm bg-blue-600 text-white">
+                                    <span className="flex items-center gap-1 italic">
+                                        {userName} est en train d'écrire
+                                        <span className="flex gap-0.5">
+                                            <span className="w-1 h-1 bg-white rounded-full animate-bounce" style={{animationDelay: '0ms'}}></span>
+                                            <span className="w-1 h-1 bg-white rounded-full animate-bounce" style={{animationDelay: '150ms'}}></span>
+                                            <span className="w-1 h-1 bg-white rounded-full animate-bounce" style={{animationDelay: '300ms'}}></span>
+                                        </span>
+                                    </span>
+                                </div>
+                            </div>
+                        )}
                         <div ref={chatEndRef} />
                     </div>
 
@@ -391,14 +430,35 @@ const ChatScreen = ({ userName, setCurrentPage }) => {
                         <input 
                             type="text" 
                             value={chatInput} 
-                            onChange={(e) => setChatInput(e.target.value)} 
-                            onKeyPress={(e) => e.key === 'Enter' && sendChatMessage()} 
+                            onChange={(e) => {
+                                setChatInput(e.target.value);
+                                setIsUserTyping(true);
+                                
+                                // Réinitialiser le timeout si l'utilisateur continue à taper
+                                if (typingTimeoutRef.current) {
+                                    clearTimeout(typingTimeoutRef.current);
+                                }
+                                
+                                // Arrêter l'animation après 1 seconde d'inactivité
+                                typingTimeoutRef.current = setTimeout(() => {
+                                    setIsUserTyping(false);
+                                }, 1000);
+                            }}
+                            onKeyPress={(e) => {
+                                if (e.key === 'Enter') {
+                                    setIsUserTyping(false);
+                                    if (typingTimeoutRef.current) {
+                                        clearTimeout(typingTimeoutRef.current);
+                                    }
+                                    sendChatMessage();
+                                }
+                            }}
                             placeholder={`Parlez à l'IA Paysanne en tant que ${userName}...`} 
                             className="flex-1 bg-gray-700 outline-none text-white text-sm px-3 py-2 rounded border border-gray-600 placeholder-gray-500" 
                             autoFocus 
                         />
                         
-                        {/* 3. Icône de frappe Utilisateur */}
+                        {/* 3. Icône de frappe Utilisateur (Animation) */}
                         <div className={`transition-opacity duration-300 ${chatInput.length > 0 ? 'opacity-100' : 'opacity-0'}`}>
                             <User size={20} className="text-blue-400 animate-pulse" />
                         </div>
