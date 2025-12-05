@@ -28,7 +28,7 @@ Le composant `Terminal.jsx` simule une console GNOME redimensionnable et gère t
 | `close` | Ferme la dernière fenêtre modale flottante ouverte. | Tous |
 | `chat` | Ouvre la fenêtre du **Chatbot "IA Paysanne"** (`ChatScreen.jsx`). | Tous |
 | `snake` | Lance le **Jeu du Serpent** (`SnakeGameScreen.jsx`). | `root` uniquement |
-| `pixel` | Lance le **Jeu Pixel** (`PixelgameScreen.jsx`). | `root` uniquement |
+| `pixel` | Lance le **Jeu Pixel** (`PixelgameScreen.jsx`). | Tous |
 | `index` | Lance l'application **Index** (`IndexScreen.jsx`). | Tous |
 
 ---
