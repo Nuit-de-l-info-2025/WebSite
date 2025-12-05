@@ -3,7 +3,7 @@ import { X, Dumbbell } from 'lucide-react';
 
 // Le chemin d'accès au contenu HTML statique ou simulé de l'Index
 // Assurez-vous que cette constante est la même que dans UbuntuDesktop.jsx
-const INDEX_HTML_PATH = '/index.html'; 
+const INDEX_HTML_PATH = '/decathlon.html'; 
 
 /**
  * Composant Modale pour afficher l'application Index dans une iframe ou son contenu.

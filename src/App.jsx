@@ -88,10 +88,10 @@ const UbuntuDesktop = () => {
     <div>Contenu du fichier HTML du jeu Pixel. Non affichable directement dans le terminal.</div>
 </body>
 </html>`,
-        'index.html': `<!DOCTYPE html>
+        'decathlon.html': `<!DOCTYPE html>
 <html lang="fr">
 <head>
-    <title>Index</title>
+    <title>Decathlon</title>
 </head>
 <body>
     <div>Contenu du fichier HTML de l'Index. Non affichable directement dans le terminal.</div>
