@@ -1,0 +1,381 @@
+import React, { useState, useRef, useEffect } from 'react';
+// CORRECTION: Utilisation de Code pour le Terminal, et vérification des autres icônes
+import { X, Code, BookOpen, MessageCircle, User } from 'lucide-react'; 
+// IMPORTS DES NOUVEAUX COMPOSANTS
+import ChatScreen from './ChatScreen'; 
+import AccessibilitySettings from './AccessibilitySettings'; 
+import Manual from './Manual'; 
+import Terminal from './Terminal'; 
+
+// CONSTANTE FIXE : Nom de l'équipe pour le prompt du Terminal
+const LOGIN_NAME = 'nuit-de-l-apero'; 
+const SECRET_COMMAND = 'login hack';
+
+const UbuntuDesktop = () => {
+    // --- États du Composant ---
+    const [currentPage, setCurrentPage] = useState('home');
+    const [commandHistory, setCommandHistory] = useState([
+        `Welcome to Ubuntu 22.04 LTS`,
+        '',
+    ]);
+    const [input, setInput] = useState('');
+    const [suggestions, setSuggestions] = useState([]); 
+    const [isAccessGranted, setIsAccessGranted] = useState(true); 
+
+    const [showTerminal, setShowTerminal] = useState(false);
+    const [showManual, setShowManual] = useState(false);
+    const [showSettings, setShowSettings] = useState(false);
+    const [showChat, setShowChat] = useState(false); // État pour le Chat
+    const [userName, setUserName] = useState("La Nuit de l'Apéro"); 
+    const [settingsInput, setSettingsInput] = useState("La Nuit de l'Apéro"); 
+    
+    // NOUVEAUX ÉTATS D'ACCESSIBILITÉ
+    const [fontSize, setFontSize] = useState('normal'); 
+    const [highContrast, setHighContrast] = useState(false);
+    const [systemSounds, setSystemSounds] = useState(true); 
+    const [reducedMotion, setReducedMotion] = useState(false); 
+    const [largeCursor, setLargeCursor] = useState(false);
+    
+    const [showFileContent, setShowFileContent] = useState(false);
+    const [fileContent, setFileContent] = useState('');
+
+    // Définitions des pages (home, chat, projets, equipe)
+    const pages = {
+        home: { name: 'home', title: 'Accueil' },
+        chat: { name: 'chat', title: 'Chat' },
+        projets: { name: 'projets', title: 'Projets' },
+        equipe: { name: 'equipe', title: 'Équipe' }
+    };
+
+    // Liste complète des commandes (utilisée pour l'auto-complétion)
+    const availableCommands = ['help', 'ls', 'cd', 'cat', 'whoami', 'clear', 'echo', 'man', 'chat'];
+    
+    // Définitions des fichiers
+    const files = {
+        'equipe.txt': `
+Nom du Projet : Nuit de l'Apéro
+Participants : Maelh (Dev Front), [Nom 2] (Dev Back), [Nom 3] (Design), [Nom 4] (Chef de Projet)
+Rôles : La Team "Nuit de l'Apéro" est là pour s'amuser et coder !
+        `,
+        'README.txt': 'Bienvenue sur notre site interactif ! Veuillez utiliser le terminal pour explorer. Tapez "help" pour plus d\'informations. Le fichier README est normalement lu via la commande "cat README.txt".',
+        'info-team.txt': 'Ce document explicite la composition et les compétences de l\'équipe Nuit de l\'Apéro. Utilisez "cat info-team.txt" pour les détails.',
+        'doc-accessibilite.txt': 'Ce document explique les options d\'accessibilité implémentées : taille du texte, contraste élevé, sons du système, animations réduites et curseur agrandi. Utilisez "cat doc-accessibilite.txt".',
+    };
+    
+    // Contenu du Manuel
+    const manualContent = `
+============================================================
+           MANUEL - Nuit de l'Info 2025
+          Guide Complet de Navigation du Site
+============================================================
+
+📚 COMMANDES DISPONIBLES:
+------------------------------------------------------------
+help (ou man) → Affiche ce manuel.
+ls            → Liste les fichiers et dossiers disponibles.
+cd [dossier]  → Change de dossier (ex: cd projets ou cd ..).
+cat [fichier] → Affiche le contenu d'un fichier (ex: cat README.txt).
+whoami        → Affiche votre nom d'utilisateur.
+clear         → Nettoie l'historique du terminal.
+echo [texte]  → Répète le texte entré.
+chat          → Lance l'interface du ChatBot.
+
+📂 DOSSIERS ACCESSIBLES (via 'cd'):
+------------------------------------------------------------
+home/      projets/      chat/      equipe/
+
+📝 FICHIERS ACCESSIBLES (via 'cat'):
+------------------------------------------------------------
+README.txt     equipe.txt     info-team.txt      doc-accessibilite.txt
+`;
+
+    // --- Fonctions de Logique ---
+    
+    useEffect(() => {
+        setCommandHistory([`${LOGIN_NAME}@ubuntu:~/${currentPage}$ `, '']);
+    }, [currentPage, userName]);
+
+    const openFile = (filename) => {
+        if (files[filename]) {
+            setFileContent(files[filename]);
+            setShowFileContent(true);
+        } else {
+            console.error(`Fichier non trouvé : ${filename}`);
+        }
+    };
+    
+    const handleTabCompletion = (e) => {
+        if (e.key === 'Tab') {
+            e.preventDefault();
+            const parts = input.trim().split(/\s+/);
+            const lastPart = parts[parts.length - 1] || '';
+            const allTargets = [...availableCommands, ...Object.keys(pages).map(p => p + '/'), ...Object.keys(files)];
+
+            const matches = allTargets.filter(target => target.startsWith(lastPart));
+
+            if (matches.length === 1) {
+                const newCommand = parts.slice(0, -1).join(' ') + (parts.length > 1 ? ' ' : '') + matches[0] + ' ';
+                setInput(newCommand.trim());
+            } else if (matches.length > 1) {
+                setCommandHistory(prev => [...prev, `${LOGIN_NAME}@ubuntu:~/${currentPage}$ ${input.trim()}`]);
+                setCommandHistory(prev => [...prev, matches.join('   '), '']);
+            }
+        }
+    };
+
+    const executeCommand = async () => {
+        if (!input.trim()) return;
+
+        const cmd = input.trim().toLowerCase();
+        setCommandHistory(prev => [...prev, `${LOGIN_NAME}@ubuntu:~/${currentPage}$ ${cmd}`]);
+        setInput('');
+        
+        if (cmd === SECRET_COMMAND) {
+            setCommandHistory(prev => [
+                ...prev, 
+                'Message: Welcome, Administrator.', 
+                ''
+            ]);
+            return;
+        }
+        
+        if (cmd === 'help' || cmd === 'man') {
+            setShowManual(true);
+            setCommandHistory(prev => [...prev, 'Ouverture du Manuel...', '']);
+            return;
+        }
+
+        // COMMANDE 'chat'
+        if (cmd === 'chat') {
+            setShowChat(true); 
+            setCommandHistory(prev => [...prev, 'Ouverture du ChatBot...', '']);
+            setInput('');
+            return;
+        }
+        
+        if (cmd === 'clear') {
+            setCommandHistory([`${LOGIN_NAME}@ubuntu:~/${currentPage}$ `, '']);
+            return;
+        }
+
+        if (cmd === 'ls') {
+            let list = Object.keys(pages).map(p => p + '/').join('\n') + 
+                             '\n' + 
+                             Object.keys(files).join('\n');
+                             
+            setCommandHistory(prev => [...prev, list, '']);
+            return;
+        }
+        
+        if (cmd.startsWith('cat ')) {
+            const filename = cmd.substring(4).trim();
+            
+            if (files[filename]) {
+                setCommandHistory(prev => [...prev, files[filename], '']);
+                if (filename === 'equipe.txt' || filename === 'README.txt' || filename === 'info-team.txt' || filename === 'doc-accessibilite.txt') {
+                    openFile(filename);
+                }
+            } else {
+                setCommandHistory(prev => [...prev, `cat: ${filename}: Aucun fichier ou dossier`, '']);
+            }
+            return;
+        }
+        
+        if (cmd.startsWith('cd ')) {
+            const target = cmd.substring(3).trim();
+            
+            if (target === '..') {
+                setCurrentPage('home');
+                setCommandHistory(prev => [...prev, 'Retour à home', '', '']);
+                return;
+            }
+            if (pages[target]) {
+                setCurrentPage(target);
+                if (target === 'chat') {
+                    setShowTerminal(false);
+                }
+                setCommandHistory(prev => [...prev, `Changement vers ${pages[target].title}`, '', '']);
+                return;
+            }
+            setCommandHistory(prev => [...prev, `bash: cd: ${target}: Aucun fichier ou dossier`, '']);
+            return;
+        }
+
+        if (cmd === 'whoami') {
+             setCommandHistory(prev => [...prev, `Nom d'affichage: ${userName}`, `Identifiant système (Terminal): ${LOGIN_NAME}`, `Équipe: Nuit de l'Apéro`, '']);
+             return;
+        }
+        
+        if (cmd.startsWith('echo ')) {
+            setCommandHistory(prev => [...prev, cmd.substring(5).trim(), '']);
+            return;
+        }
+
+        try {
+             setCommandHistory(prev => [...prev, `bash: ${cmd}: command not found`, '']);
+        } catch (err) {
+             setCommandHistory(prev => [...prev, `Erreur: ${err.message}`, '']);
+        }
+    };
+    
+    const openSettings = () => {
+        setSettingsInput(userName);
+        setShowSettings(true);
+    };
+
+
+    // Rendu de la Barre de Titre GNOME (pour la modale FileContent NON DEPLACABLE)
+    const GnomeTitleBar = ({ title, onClose }) => (
+        <div className="flex-shrink-0 h-8 bg-gray-800 flex items-center justify-between px-2 border-b border-gray-700">
+            <div className="flex space-x-2">
+                <button onClick={onClose} className="w-3 h-3 bg-red-500 rounded-full hover:bg-red-600 transition group relative">
+                    <X size={8} className="absolute inset-0 m-auto text-red-900 opacity-0 group-hover:opacity-100 transition" />
+                </button>
+                <div className="w-3 h-3 bg-yellow-500 rounded-full opacity-50 cursor-not-allowed"></div>
+                <div className="w-3 h-3 bg-green-500 rounded-full opacity-50 cursor-not-allowed"></div>
+            </div>
+            <div className="flex items-center flex-1 justify-center text-gray-400 text-xs font-sans select-none">
+                {title}
+            </div>
+            <div className="w-[45px]"></div>
+        </div>
+    );
+
+    // --- Rendu des Modales Flottantes/Plein Écran ---
+
+
+    if (showFileContent) {
+        // La modale showFileContent reste centrée et non déplaçable.
+        return (
+            <div className="w-screen h-screen flex items-center justify-center bg-gray-950/70 backdrop-blur-sm"> 
+                <div className="w-[80vw] h-[80vh] flex flex-col bg-gray-900 rounded-lg shadow-2xl overflow-hidden border border-gray-700">
+                    <GnomeTitleBar 
+                        title={`Affichage de : ${
+                            fileContent === files['equipe.txt'] ? 'equipe.txt' : 
+                            fileContent === files['info-team.txt'] ? 'info-team.txt' :
+                            fileContent === files['doc-accessibilite.txt'] ? 'doc-accessibilite.txt' :
+                            'README.txt'
+                        }`}
+                        onClose={() => setShowFileContent(false)}
+                    />
+                    <div className="flex-1 overflow-y-auto p-8 bg-gray-900 text-gray-200 font-mono text-sm leading-relaxed whitespace-pre-wrap">
+                        <pre className="text-white">
+                             {fileContent}
+                        </pre>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+    
+    // --- Rendu du Bureau Ubuntu et du Dock ---
+    const handleDockClick = (action) => {
+        action();
+    };
+    
+    // Application de la réduction de mouvement
+    const transitionClass = reducedMotion ? '' : 'transition duration-300';
+
+    return (
+        // Application du style de curseur agrandi (largeCursor)
+        <div 
+            className={`w-screen h-screen overflow-hidden flex flex-col ${largeCursor ? 'cursor-crosshair' : ''}`} 
+            style={{ backgroundImage: 'url(/fond_ecran.png)', backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat', backgroundAttachment: 'fixed' }}
+        >
+            {/* Barre Supérieure (Top Bar) - Inchangée */}
+            <div className="bg-gray-950 bg-opacity-95 h-10 flex items-center px-4 shadow-lg border-b border-gray-800">
+                <div className="text-white text-sm font-semibold">Activities</div>
+                <div className="flex-1 flex justify-center">
+                    <div className="text-white text-xs font-mono">{new Date().toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })}</div>
+                </div>
+                <div className="flex items-center space-x-2">
+                    <div className="text-white text-xs font-mono">{userName}</div>
+                    <div className="text-white text-xs font-mono">{new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</div>
+                </div>
+            </div>
+
+            <div className="flex flex-1 overflow-hidden">
+                {/* Dock / Lanceur d'Applications (Gauche) */}
+                <div className="w-20 bg-gray-950 bg-opacity-95 flex flex-col items-center py-4 gap-4 border-r border-gray-800 shadow-lg">
+                    
+                    {/* Terminal (ICÔNE Code) */}
+                    <div onClick={() => handleDockClick(() => setShowTerminal(true))} className={`w-12 h-12 bg-gray-800 rounded-lg flex items-center justify-center hover:scale-110 ${transitionClass} cursor-pointer shadow-md p-1 border border-purple-600`}>
+                        <Code size={24} className="text-purple-400"/> {/* Utilisation de l'icône Code */}
+                    </div>
+
+                    {/* Manuel (HELP) */}
+                    <div onClick={() => handleDockClick(() => setShowManual(true))} className={`w-12 h-12 bg-gray-800 rounded-lg flex items-center justify-center hover:scale-110 ${transitionClass} cursor-pointer shadow-md p-1 border border-yellow-500`}>
+                        <BookOpen size={24} className="text-yellow-400" />
+                    </div>
+
+                    {/* Chat */}
+                    <div 
+                        onClick={() => handleDockClick(() => setShowChat(true))} 
+                        className={`w-12 h-12 bg-gray-800 rounded-lg flex items-center justify-center hover:scale-110 ${transitionClass} cursor-pointer shadow-md p-1 border border-blue-400`}
+                    >
+                        <MessageCircle size={24} className="text-blue-400" />
+                    </div>
+
+                    <div className="flex-1"></div>
+                    
+                    {/* Icône de Paramètres (Accessibilité) */}
+                    <div onClick={openSettings} className={`w-12 h-12 bg-gray-800 rounded-lg flex items-center justify-center hover:scale-110 ${transitionClass} cursor-pointer shadow-md p-1 mb-4 border border-gray-400`}>
+                         <img src="/logo.png" alt="Paramètres Accessibilité" className="w-full h-full object-cover rounded" />
+                         {/* SINON : <User size={24} className="text-gray-400" /> */}
+                    </div>
+                </div>
+
+                {/* Contenu Principal du Bureau (VIDE) */}
+                <div className="flex-1 p-12 overflow-hidden relative">
+                    {/* Le bureau reste vide, la navigation se fait par le Terminal ou les modales. */}
+                </div>
+            </div>
+            
+            {/* Composants Modaux */}
+            <AccessibilitySettings
+                userName={userName}
+                showSettings={showSettings}
+                setShowSettings={setShowSettings}
+                fontSize={fontSize}
+                setFontSize={setFontSize}
+                highContrast={highContrast}
+                setHighContrast={setHighContrast}
+                systemSounds={systemSounds}
+                setSystemSounds={setSystemSounds}
+                reducedMotion={reducedMotion}
+                setReducedMotion={setReducedMotion}
+                largeCursor={largeCursor}
+                setLargeCursor={setLargeCursor}
+            />
+            
+            <Terminal 
+                showTerminal={showTerminal}
+                setShowTerminal={setShowTerminal}
+                currentPage={currentPage}
+                commandHistory={commandHistory}
+                input={input}
+                setInput={setInput}
+                executeCommand={executeCommand}
+                handleTabCompletion={handleTabCompletion}
+                fontSize={fontSize}
+                highContrast={highContrast}
+                LOGIN_NAME={LOGIN_NAME}
+            />
+
+            <Manual
+                showManual={showManual}
+                setShowManual={setShowManual}
+                manualContent={manualContent}
+            />
+            {/* CORRECTION: AJOUT CRUCIAL de setCurrentPage pour ChatScreen.jsx */}
+            <ChatScreen
+                userName={userName}
+                showChat={showChat} 
+                setShowChat={setShowChat} 
+                setCurrentPage={setCurrentPage} // <--- C'EST CETTE PROPRIÉTÉ QUI MANQUAIT PROBABLEMENT
+            />
+        </div>
+    );
+};
+
+export default UbuntuDesktop;
