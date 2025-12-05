@@ -105,7 +105,6 @@ const UbuntuDesktop = () => {
 Les commandes disponibles sont :
 - help / man : Affiche ce manuel.
 - ls : Liste les fichiers et dossiers dans le répertoire actuel.
-- cd [dossier] : Change de répertoire. (Ex: cd chat)
 - cat [fichier.txt] : Affiche le contenu d'un fichier.
 - whoami : Affiche le nom d'utilisateur actuel.
 - clear : Nettoie le terminal.
