@@ -1,5 +1,6 @@
 import React from 'react';
-import { User } from 'lucide-react';
+// On retire l'import de User si on utilise une image
+// import { User } from 'lucide-react'; 
 
 const AccessibilitySettings = ({
     userName,
@@ -20,14 +21,13 @@ const AccessibilitySettings = ({
     if (!showSettings) return null;
 
     const LOGIN_NAME = 'nuit-de-l-apero'; 
-    // Note: Le GnomeTitleBar a été déplacé dans App.jsx dans votre dernière version.
-    // Pour que le style fonctionne ici, nous utilisons le style directement.
 
     return (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-70">
             <div className="w-[500px] bg-gray-800 p-6 rounded-lg shadow-2xl border border-gray-700 max-h-[90vh] overflow-y-auto">
+                {/* NOUVEAU TITRE AVEC LE LOGO */}
                 <h2 className="text-xl font-bold text-white mb-6 flex items-center">
-                    <User size={20} className="mr-2 text-yellow-400" /> Paramètres d'Accessibilité
+                    <img src="/logo.png" alt="Logo Nuit de l'Apéro" className="w-6 h-6 mr-2" /> Paramètres d'Accessibilité
                 </h2>
                 
                 {/* Section Utilisateur */}
@@ -40,7 +40,7 @@ const AccessibilitySettings = ({
                     <p className="text-xs text-gray-500 mt-1">Identifiant terminal: {LOGIN_NAME}@ubuntu</p>
                 </div>
 
-                {/* Section Accessibilité */}
+                {/* Section Accessibilité (Inchangée) */}
                 <div className="space-y-4 mb-6">
                     <h3 className="text-sm font-semibold text-gray-300 mb-3">Options d'Accessibilité</h3>
                     
