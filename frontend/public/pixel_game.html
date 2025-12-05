@@ -1,0 +1,1420 @@
+<!doctype html>
+<html lang="fr">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Adventure Apero</title>
+  <script src="/_sdk/element_sdk.js"></script>
+  <style>
+    body {
+        position: absolute;
+      box-sizing: border-box;
+      background-color: #000;
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: 'Press Start 2P', 'Courier New', monospace;
+    }
+
+    .game-wrapper {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      background: #000;
+    }
+
+    .game-header {
+      padding: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 3px solid #2a2a2a;
+    }
+
+    .game-title {
+      font-size: 16px;
+      color: #fff;
+      text-shadow: 2px 2px #ff0000;
+    }
+
+    .stats {
+      display: flex;
+      gap: 20px;
+      font-size: 12px;
+      color: #fff;
+    }
+
+    .stat-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .hearts {
+      display: flex;
+      gap: 4px;
+    }
+
+    .heart {
+      width: 16px;
+      height: 16px;
+      color: #ff0000;
+    }
+
+    .game-canvas-container {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .game-canvas {
+      border: 4px solid #2a2a2a;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+    }
+
+    .controls {
+      padding: 16px;
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      border-top: 3px solid #2a2a2a;
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .control-label {
+      font-size: 10px;
+      color: #888;
+    }
+
+    .dpad {
+      display: grid;
+      grid-template-columns: 40px 40px 40px;
+      grid-template-rows: 40px 40px 40px;
+      gap: 4px;
+    }
+
+    .dpad-btn {
+      background: #1a1a1a;
+      border: 2px solid #444;
+      color: #fff;
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+    }
+
+    .dpad-btn:active {
+      background: #333;
+      border-color: #666;
+    }
+
+    .dpad-up { grid-column: 2; grid-row: 1; }
+    .dpad-left { grid-column: 1; grid-row: 2; }
+    .dpad-right { grid-column: 3; grid-row: 2; }
+    .dpad-down { grid-column: 2; grid-row: 3; }
+
+    .action-buttons {
+      display: flex;
+      gap: 12px;
+    }
+
+    .action-btn {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: #8b0000;
+      border: 3px solid #ff0000;
+      color: #fff;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+    }
+
+    .action-btn:active {
+      background: #660000;
+      transform: scale(0.95);
+    }
+  </style>
+  <style> @view-transition { navigation: auto; } </style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+  <script src="https://cdn.tailwindcss.com" type="text/javascript"></script>
+ </head>
+ <body>
+    <style>
+        header {
+            width: 100%;
+        }
+        img {
+            width: 50%;
+            height: 50%;
+            display: center;
+            justify-content: center;
+            align-items: center;
+            margin: auto;
+        }
+        #popup {
+            
+            position: static;
+            top: 0; left: 0; bottom: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0);
+            display: center;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            text-align: center;
+            
+        }
+        .popup-content {
+            margin-top: 5%; margin-left: 15%; margin-right: 15%;
+            position: center;
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+        }
+        #popup p {
+            margin-top: 5%;
+            margin-bottom: 5%;
+        }
+        #content { display: none; }
+    </style>
+     <div id="popup">
+        <header class="game-header">
+    <h1 class="game-title" id="gameTitle">APERO ADVENTURE</h1>
+    
+   </header>
+
+        <div class="popup-content">
+            <h2>Apero Adventure</h2>
+
+            <img src="Deplacement.png" alt="">
+        
+
+            <button onclick="closePopup()">Commencer</button>
+        </div>
+        <script>
+        function closePopup() {
+            document.getElementById('popup').style.display = 'none';
+            document.getElementById('content').style.display = 'block';
+        }
+    </script>
+     </div> <div id="content">
+  <div class="game-wrapper">
+   <header class="game-header">
+    <h1 class="game-title" id="gameTitle">APERO ADVENTURE</h1>
+    <div class="stats">
+     <div class="stat-item"><span>❤️</span>
+      <div class="hearts" id="hearts"></div>
+     </div>
+
+     <div class="stat-item"><span>🍺</span> <span id="beers">0</span>
+     </div>
+    </div>
+   </header>
+   <main class="game-canvas-container">
+    <canvas id="gameCanvas" class="game-canvas" width="512" height="448"></canvas>
+   </main>
+  <script>
+    const defaultConfig = {
+      background_color: "#006400",
+      wall_color: "#8b4513",
+      hero_color: "#0000ff",
+      enemy_color: "#ff0000",
+      gem_color: "#ffff00",
+      font_family: "Press Start 2P",
+      font_size: 16,
+      game_title: "APERO ADVENTURE",
+      hero_name: "Link"
+    };
+
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    const TILE_SIZE = 32;
+    const MAP_WIDTH = 16;
+    const MAP_HEIGHT = 14;
+
+    let gameState = {
+      player: { 
+        x: 7, y: 10, 
+        renderX: 7 * TILE_SIZE, renderY: 10 * TILE_SIZE,
+        direction: 'up', health: 3, maxHealth: 3, beers: 0,
+        moving: false
+      },
+      enemies: [
+        { x: 3, y: 3, renderX: 3 * TILE_SIZE, renderY: 3 * TILE_SIZE, type: 'slime', direction: 'right', health: 3, maxHealth: 3 },
+        { x: 12, y: 5, renderX: 12 * TILE_SIZE, renderY: 5 * TILE_SIZE, type: 'bat', direction: 'left', health: 3, maxHealth: 3 },
+        { x: 8, y: 3, renderX: 8 * TILE_SIZE, renderY: 3 * TILE_SIZE, type: 'slime', direction: 'down', health: 3, maxHealth: 3 }
+      ],
+      beers: [
+        { x: 2, y: 2 },
+        { x: 13, y: 2 },
+        { x: 7, y: 6 }
+      ],
+      tallGrass: [
+        { x: 3, y: 7 }, { x: 4, y: 7 }, { x: 5, y: 8 },
+        { x: 11, y: 8 }, { x: 12, y: 8 }, { x: 13, y: 9 },
+        { x: 2, y: 10 }, { x: 3, y: 11 }, { x: 4, y: 10 },
+        { x: 9, y: 9 }, { x: 10, y: 10 }, { x: 11, y: 9 },
+        { x: 6, y: 4 }, { x: 7, y: 5 }, { x: 8, y: 4 }
+      ],
+      walls: [],
+      attacking: false,
+      attackFrame: 0,
+      shielding: false
+    };
+
+    // Generate dungeon walls
+    for (let x = 0; x < MAP_WIDTH; x++) {
+      gameState.walls.push({ x, y: 0 });
+      gameState.walls.push({ x, y: MAP_HEIGHT - 1 });
+    }
+    for (let y = 1; y < MAP_HEIGHT - 1; y++) {
+      gameState.walls.push({ x: 0, y });
+      gameState.walls.push({ x: MAP_WIDTH - 1, y });
+    }
+
+    // Add some interior walls
+    for (let i = 2; i < 6; i++) {
+      gameState.walls.push({ x: 5, y: i });
+      gameState.walls.push({ x: 10, y: i + 4 });
+    }
+
+    const keys = {};
+    
+    function isWall(x, y) {
+      return gameState.walls.some(w => w.x === x && w.y === y);
+    }
+
+    function isEnemy(x, y) {
+      return gameState.enemies.some(e => e.x === x && e.y === y && e.health > 0);
+    }
+
+    function movePlayer(dx, dy) {
+      if (gameState.player.moving) return;
+      
+      const newX = gameState.player.x + dx;
+      const newY = gameState.player.y + dy;
+      
+      // Déterminer la nouvelle direction
+      let newDirection;
+      if (dx < 0) newDirection = 'left';
+      else if (dx > 0) newDirection = 'right';
+      else if (dy < 0) newDirection = 'up';
+      else if (dy > 0) newDirection = 'down';
+      
+      if (!isWall(newX, newY) && !isEnemy(newX, newY)) {
+        // Peut avancer: se déplacer
+        gameState.player.moving = true;
+        gameState.player.x = newX;
+        gameState.player.y = newY;
+        gameState.player.direction = newDirection;
+        
+        setTimeout(() => {
+          gameState.player.moving = false;
+          checkBeerCollision();
+        }, 150);
+      } else {
+        // Ne peut pas avancer: juste tourner
+        gameState.player.direction = newDirection;
+      }
+    }
+
+    function checkBeerCollision() {
+      const beerIndex = gameState.beers.findIndex(b => 
+        b.x === gameState.player.x && b.y === gameState.player.y
+      );
+      
+      if (beerIndex !== -1) {
+        gameState.beers.splice(beerIndex, 1);
+        gameState.player.beers++;
+        updateStats();
+      }
+    }
+
+    function attack() {
+      if (gameState.attacking) return;
+      
+      gameState.attacking = true;
+      gameState.attackFrame = 0;
+      
+      const dir = gameState.player.direction;
+      let attackX = gameState.player.x;
+      let attackY = gameState.player.y;
+      
+      if (dir === 'up') attackY--;
+      else if (dir === 'down') attackY++;
+      else if (dir === 'left') attackX--;
+      else if (dir === 'right') attackX++;
+      
+      gameState.enemies.forEach(enemy => {
+        if (enemy.x === attackX && enemy.y === attackY && enemy.health > 0) {
+          enemy.health--;
+        }
+      });
+      
+      setTimeout(() => {
+        gameState.attacking = false;
+      }, 200);
+    }
+
+    function moveEnemies() {
+      gameState.enemies.forEach(enemy => {
+        if (enemy.health <= 0) return;
+        
+        // Calculer la distance avec le joueur
+        const dx = enemy.x - gameState.player.x;
+        const dy = enemy.y - gameState.player.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        // Si le joueur est dans un rayon de 3 blocs, poursuivre
+        if (distance <= 3) {
+          // Déterminer la direction pour se rapprocher du joueur
+          let newX = enemy.x;
+          let newY = enemy.y;
+          
+          // Prioriser le mouvement horizontal ou vertical selon la plus grande distance
+          if (Math.abs(dx) > Math.abs(dy)) {
+            // Se déplacer horizontalement
+            if (dx > 0) {
+              newX--;
+              enemy.direction = 'left';
+            } else {
+              newX++;
+              enemy.direction = 'right';
+            }
+          } else {
+            // Se déplacer verticalement
+            if (dy > 0) {
+              newY--;
+              enemy.direction = 'up';
+            } else {
+              newY++;
+              enemy.direction = 'down';
+            }
+          }
+          
+          // Vérifier si le mouvement est possible
+          if (!isWall(newX, newY) && 
+              !(newX === gameState.player.x && newY === gameState.player.y) &&
+              !gameState.enemies.some(e => e !== enemy && e.x === newX && e.y === newY && e.health > 0)) {
+            enemy.x = newX;
+            enemy.y = newY;
+          }
+        } else {
+          // Comportement aléatoire si le joueur est loin
+          const moveChance = enemy.health < enemy.maxHealth ? 0.5 : 0.7;
+          
+          if (Math.random() > moveChance) {
+            const directions = ['up', 'down', 'left', 'right'];
+            const dir = directions[Math.floor(Math.random() * directions.length)];
+            
+            let newX = enemy.x;
+            let newY = enemy.y;
+            
+            if (dir === 'up') newY--;
+            else if (dir === 'down') newY++;
+            else if (dir === 'left') newX--;
+            else if (dir === 'right') newX++;
+            
+            if (!isWall(newX, newY) && 
+                !(newX === gameState.player.x && newY === gameState.player.y) &&
+                !gameState.enemies.some(e => e !== enemy && e.x === newX && e.y === newY && e.health > 0)) {
+              enemy.x = newX;
+              enemy.y = newY;
+              enemy.direction = dir;
+            }
+          }
+        }
+        
+        // L'ennemi attaque s'il est adjacent au joueur
+        const finalDx = Math.abs(enemy.x - gameState.player.x);
+        const finalDy = Math.abs(enemy.y - gameState.player.y);
+        
+        if ((finalDx === 1 && finalDy === 0) || (finalDx === 0 && finalDy === 1)) {
+          // L'ennemi est adjacent, orienter vers le joueur
+          if (gameState.player.x < enemy.x) enemy.direction = 'left';
+          else if (gameState.player.x > enemy.x) enemy.direction = 'right';
+          else if (gameState.player.y < enemy.y) enemy.direction = 'up';
+          else if (gameState.player.y > enemy.y) enemy.direction = 'down';
+          
+          // Attaquer le joueur en sautant (si pas de bouclier)
+          if (Math.random() > 0.6 && !gameState.shielding && !enemy.attacking) {
+            enemy.attacking = true;
+            enemy.jumpStartTime = Date.now();
+            enemy.jumpStartX = enemy.x;
+            enemy.jumpStartY = enemy.y;
+            enemy.jumpTargetX = gameState.player.x;
+            enemy.jumpTargetY = gameState.player.y;
+            
+            // Infliger des dégâts après un court délai
+            setTimeout(() => {
+              if (enemy.attacking && !gameState.shielding) {
+                gameState.player.health = Math.max(0, gameState.player.health - 1);
+                updateStats();
+              }
+            }, 150);
+            
+            setTimeout(() => {
+              enemy.attacking = false;
+              enemy.jumpStartTime = null;
+            }, 400);
+          }
+        }
+      });
+    }
+    
+    function updatePositions() {
+      const smoothness = 0.25;
+      
+      // Interpolation du joueur
+      const targetX = gameState.player.x * TILE_SIZE;
+      const targetY = gameState.player.y * TILE_SIZE;
+      gameState.player.renderX += (targetX - gameState.player.renderX) * smoothness;
+      gameState.player.renderY += (targetY - gameState.player.renderY) * smoothness;
+      
+      // Interpolation des ennemis
+      gameState.enemies.forEach(enemy => {
+        const targetX = enemy.x * TILE_SIZE;
+        const targetY = enemy.y * TILE_SIZE;
+        enemy.renderX += (targetX - enemy.renderX) * smoothness;
+        enemy.renderY += (targetY - enemy.renderY) * smoothness;
+      });
+    }
+
+    function drawTile(x, y, color) {
+      ctx.fillStyle = color;
+      ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+    }
+
+    function drawHero(renderX, renderY, color, direction) {
+      // Tête
+      ctx.fillStyle = '#ffd4a3';
+      ctx.fillRect(renderX + 10, renderY + 6, 12, 10);
+      
+      // Cheveux/Casque
+      ctx.fillStyle = color;
+      ctx.fillRect(renderX + 10, renderY + 4, 12, 4);
+      ctx.fillRect(renderX + 8, renderY + 6, 2, 4);
+      ctx.fillRect(renderX + 22, renderY + 6, 2, 4);
+      
+      // Yeux
+      ctx.fillStyle = '#000';
+      if (direction === 'up') {
+        ctx.fillRect(renderX + 12, renderY + 10, 2, 2);
+        ctx.fillRect(renderX + 18, renderY + 10, 2, 2);
+      } else if (direction === 'down') {
+        ctx.fillRect(renderX + 12, renderY + 12, 2, 2);
+        ctx.fillRect(renderX + 18, renderY + 12, 2, 2);
+      } else if (direction === 'left') {
+        ctx.fillRect(renderX + 11, renderY + 11, 2, 2);
+        ctx.fillRect(renderX + 16, renderY + 11, 2, 2);
+      } else {
+        ctx.fillRect(renderX + 14, renderY + 11, 2, 2);
+        ctx.fillRect(renderX + 19, renderY + 11, 2, 2);
+      }
+      
+      // Corps
+      ctx.fillStyle = color;
+      ctx.fillRect(renderX + 9, renderY + 16, 14, 8);
+      
+      // Bras
+      ctx.fillStyle = '#ffd4a3';
+      if (direction === 'left') {
+        ctx.fillRect(renderX + 5, renderY + 16, 4, 6);
+        ctx.fillRect(renderX + 23, renderY + 18, 4, 4);
+      } else if (direction === 'right') {
+        ctx.fillRect(renderX + 5, renderY + 18, 4, 4);
+        ctx.fillRect(renderX + 23, renderY + 16, 4, 6);
+      } else {
+        ctx.fillRect(renderX + 5, renderY + 17, 4, 5);
+        ctx.fillRect(renderX + 23, renderY + 17, 4, 5);
+      }
+      
+      // Jambes
+      ctx.fillStyle = '#654321';
+      ctx.fillRect(renderX + 10, renderY + 24, 5, 4);
+      ctx.fillRect(renderX + 17, renderY + 24, 5, 4);
+      
+      // Pieds
+      ctx.fillStyle = '#8B4513';
+      ctx.fillRect(renderX + 10, renderY + 28, 5, 2);
+      ctx.fillRect(renderX + 17, renderY + 28, 5, 2);
+    }
+    
+    function drawSlime(renderX, renderY, color, direction) {
+      // Corps blob aqueux (bleu transparent)
+      ctx.fillStyle = 'rgba(100, 200, 255, 0.7)';
+      ctx.fillRect(renderX + 8, renderY + 14, 16, 12);
+      ctx.fillRect(renderX + 6, renderY + 16, 20, 8);
+      ctx.fillRect(renderX + 10, renderY + 12, 12, 2);
+      
+      // Couche externe transparente pour effet aqueux
+      ctx.fillStyle = 'rgba(150, 220, 255, 0.5)';
+      ctx.fillRect(renderX + 7, renderY + 15, 18, 10);
+      ctx.fillRect(renderX + 9, renderY + 13, 14, 2);
+      
+      // Reflets brillants d'eau
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+      ctx.fillRect(renderX + 10, renderY + 15, 4, 3);
+      ctx.fillRect(renderX + 19, renderY + 17, 3, 2);
+      ctx.fillRect(renderX + 14, renderY + 13, 2, 2);
+      
+      // Bulles d'eau à l'intérieur
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+      ctx.fillRect(renderX + 16, renderY + 20, 2, 2);
+      ctx.fillRect(renderX + 12, renderY + 22, 2, 2);
+      ctx.fillRect(renderX + 20, renderY + 21, 1, 1);
+      
+      // Ombre/base
+      ctx.fillStyle = 'rgba(0,0,0,0.3)';
+      ctx.fillRect(renderX + 7, renderY + 24, 18, 2);
+      
+      // Yeux
+      ctx.fillStyle = '#fff';
+      if (direction === 'left') {
+        ctx.fillRect(renderX + 10, renderY + 17, 4, 5);
+        ctx.fillRect(renderX + 16, renderY + 18, 3, 4);
+      } else if (direction === 'right') {
+        ctx.fillRect(renderX + 14, renderY + 18, 3, 4);
+        ctx.fillRect(renderX + 20, renderY + 17, 4, 5);
+      } else {
+        ctx.fillRect(renderX + 11, renderY + 17, 4, 5);
+        ctx.fillRect(renderX + 17, renderY + 17, 4, 5);
+      }
+      
+      // Pupilles
+      ctx.fillStyle = '#000';
+      if (direction === 'left') {
+        ctx.fillRect(renderX + 10, renderY + 19, 2, 2);
+        ctx.fillRect(renderX + 16, renderY + 19, 2, 2);
+      } else if (direction === 'right') {
+        ctx.fillRect(renderX + 15, renderY + 19, 2, 2);
+        ctx.fillRect(renderX + 22, renderY + 19, 2, 2);
+      } else {
+        ctx.fillRect(renderX + 12, renderY + 19, 2, 2);
+        ctx.fillRect(renderX + 18, renderY + 19, 2, 2);
+      }
+      
+      // Bouche
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+      ctx.fillRect(renderX + 13, renderY + 22, 6, 1);
+    }
+    
+    function drawBat(renderX, renderY, color, direction) {
+      // Corps de brocoli (vert foncé)
+      ctx.fillStyle = '#2d5016';
+      ctx.fillRect(renderX + 13, renderY + 14, 6, 8);
+      
+      // Tête de brocoli avec texture
+      ctx.fillStyle = '#3d6b1f';
+      ctx.fillRect(renderX + 12, renderY + 11, 8, 5);
+      
+      // Texture de brocoli sur la tête (petites bosses)
+      ctx.fillStyle = '#4a7c26';
+      ctx.fillRect(renderX + 12, renderY + 11, 2, 2);
+      ctx.fillRect(renderX + 15, renderY + 10, 2, 2);
+      ctx.fillRect(renderX + 18, renderY + 11, 2, 2);
+      ctx.fillRect(renderX + 13, renderY + 13, 2, 2);
+      ctx.fillRect(renderX + 17, renderY + 13, 2, 2);
+      
+      // Oreilles en forme de feuilles
+      ctx.fillStyle = '#3d6b1f';
+      ctx.fillRect(renderX + 11, renderY + 9, 2, 3);
+      ctx.fillRect(renderX + 19, renderY + 9, 2, 3);
+      ctx.fillRect(renderX + 10, renderY + 10, 1, 2);
+      ctx.fillRect(renderX + 21, renderY + 10, 1, 2);
+      
+      // Ailes de brocoli (avec texture végétale)
+      const wingOffset = Math.floor(Date.now() / 200) % 2;
+      ctx.fillStyle = '#3d6b1f';
+      if (direction === 'left') {
+        ctx.fillRect(renderX + 4, renderY + 14 + wingOffset, 9, 6);
+        ctx.fillRect(renderX + 19, renderY + 16 + wingOffset, 6, 4);
+        // Texture sur les ailes
+        ctx.fillStyle = '#4a7c26';
+        ctx.fillRect(renderX + 5, renderY + 15 + wingOffset, 2, 2);
+        ctx.fillRect(renderX + 8, renderY + 16 + wingOffset, 2, 2);
+      } else if (direction === 'right') {
+        ctx.fillRect(renderX + 7, renderY + 16 + wingOffset, 6, 4);
+        ctx.fillRect(renderX + 19, renderY + 14 + wingOffset, 9, 6);
+        // Texture sur les ailes
+        ctx.fillStyle = '#4a7c26';
+        ctx.fillRect(renderX + 21, renderY + 15 + wingOffset, 2, 2);
+        ctx.fillRect(renderX + 24, renderY + 16 + wingOffset, 2, 2);
+      } else {
+        ctx.fillRect(renderX + 4, renderY + 15 + wingOffset, 9, 5);
+        ctx.fillRect(renderX + 19, renderY + 15 + wingOffset, 9, 5);
+        // Texture sur les ailes
+        ctx.fillStyle = '#4a7c26';
+        ctx.fillRect(renderX + 5, renderY + 16 + wingOffset, 2, 2);
+        ctx.fillRect(renderX + 21, renderY + 16 + wingOffset, 2, 2);
+      }
+      
+      // Yeux (jaune pour contraste avec le vert)
+      ctx.fillStyle = '#ffff00';
+      ctx.fillRect(renderX + 14, renderY + 13, 2, 2);
+      ctx.fillRect(renderX + 16, renderY + 13, 2, 2);
+      
+      // Pupilles noires
+      ctx.fillStyle = '#000';
+      ctx.fillRect(renderX + 15, renderY + 13, 1, 1);
+      ctx.fillRect(renderX + 17, renderY + 13, 1, 1);
+    }
+
+    function render(config) {
+      const bgColor = config.background_color || defaultConfig.background_color;
+      const wallColor = config.wall_color || defaultConfig.wall_color;
+      const heroColor = config.hero_color || defaultConfig.hero_color;
+      const enemyColor = config.enemy_color || defaultConfig.enemy_color;
+      const gemColor = config.gem_color || defaultConfig.gem_color;
+      
+      ctx.fillStyle = bgColor;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      // Dessiner l'herbe haute
+      gameState.tallGrass.forEach(grass => {
+        const gx = grass.x * TILE_SIZE;
+        const gy = grass.y * TILE_SIZE;
+        const sway = Math.sin(Date.now() / 300 + grass.x + grass.y) * 2;
+        
+        // Herbes individuelles
+        ctx.fillStyle = '#2d5016';
+        for (let i = 0; i < 8; i++) {
+          const offsetX = (i % 4) * 8 + 4;
+          const offsetY = Math.floor(i / 4) * 16 + 8;
+          ctx.fillRect(gx + offsetX + sway, gy + offsetY, 3, 12);
+          ctx.fillRect(gx + offsetX - 1 + sway, gy + offsetY + 4, 1, 6);
+          ctx.fillRect(gx + offsetX + 3 + sway, gy + offsetY + 4, 1, 6);
+        }
+        
+        // Herbes plus claires devant
+        ctx.fillStyle = '#3d6b1f';
+        for (let i = 0; i < 6; i++) {
+          const offsetX = (i % 3) * 10 + 6;
+          const offsetY = Math.floor(i / 3) * 16 + 12;
+          ctx.fillRect(gx + offsetX + sway, gy + offsetY, 2, 10);
+        }
+      });
+      
+      gameState.walls.forEach(wall => {
+        const wx = wall.x * TILE_SIZE;
+        const wy = wall.y * TILE_SIZE;
+        
+        // Fond du mur (pierre)
+        ctx.fillStyle = wallColor;
+        ctx.fillRect(wx, wy, TILE_SIZE, TILE_SIZE);
+        
+        // Texture de pierre naturelle
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
+        ctx.fillRect(wx + 4, wy + 4, 24, 24);
+        ctx.fillRect(wx + 8, wy + 2, 6, 6);
+        ctx.fillRect(wx + 18, wy + 22, 8, 6);
+        
+        // Cracks et détails
+        ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(wx + 6, wy + 8);
+        ctx.lineTo(wx + 14, wy + 12);
+        ctx.moveTo(wx + 20, wy + 6);
+        ctx.lineTo(wx + 26, wy + 10);
+        ctx.moveTo(wx + 10, wy + 20);
+        ctx.lineTo(wx + 18, wy + 24);
+        ctx.stroke();
+        
+        // Highlights pour relief
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+        ctx.fillRect(wx + 2, wy + 2, 12, 2);
+        ctx.fillRect(wx + 2, wy + 2, 2, 12);
+        
+        // Ombres pour profondeur
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+        ctx.fillRect(wx + 26, wy + 4, 4, 24);
+        ctx.fillRect(wx + 4, wy + 26, 24, 4);
+      });
+      
+      gameState.beers.forEach(beer => {
+        const beerX = beer.x * TILE_SIZE + TILE_SIZE / 2;
+        const beerY = beer.y * TILE_SIZE + TILE_SIZE / 2;
+        const sparkle = Math.sin(Date.now() / 200) * 0.3 + 0.7;
+        
+        // Ombre de la bière
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+        ctx.beginPath();
+        ctx.ellipse(beerX, beerY + 10, 8, 3, 0, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Verre de bière (corps principal)
+        ctx.fillStyle = '#FFA500';
+        ctx.fillRect(beerX - 6, beerY - 4, 12, 12);
+        ctx.fillRect(beerX - 5, beerY + 8, 10, 2);
+        ctx.fillRect(beerX - 7, beerY - 2, 14, 8);
+        
+        // Mousse blanche
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(beerX - 6, beerY - 8, 12, 5);
+        ctx.fillRect(beerX - 7, beerY - 6, 14, 3);
+        ctx.fillRect(beerX - 5, beerY - 9, 10, 2);
+        
+        // Bulles dans la mousse
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+        ctx.fillRect(beerX - 4, beerY - 7, 2, 2);
+        ctx.fillRect(beerX + 2, beerY - 8, 2, 2);
+        
+        // Reflets sur le verre
+        ctx.fillStyle = `rgba(255, 255, 255, ${sparkle * 0.5})`;
+        ctx.fillRect(beerX - 5, beerY - 2, 2, 6);
+        ctx.fillRect(beerX + 4, beerY + 2, 1, 4);
+        
+        // Poignée de la chope
+        ctx.strokeStyle = '#FFA500';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(beerX + 8, beerY + 2, 4, -Math.PI / 2, Math.PI / 2);
+        ctx.stroke();
+      });
+      
+      gameState.enemies.forEach(enemy => {
+        if (enemy.health > 0) {
+          let renderX = enemy.renderX;
+          let renderY = enemy.renderY;
+          
+          // Animation d'attaque - saut vers le héros
+          if (enemy.attacking && enemy.jumpStartTime) {
+            const elapsed = Date.now() - enemy.jumpStartTime;
+            const duration = 400;
+            const progress = Math.min(elapsed / duration, 1);
+            
+            // Calculer la position du saut
+            const startX = enemy.jumpStartX * TILE_SIZE;
+            const startY = enemy.jumpStartY * TILE_SIZE;
+            const targetX = enemy.jumpTargetX * TILE_SIZE;
+            const targetY = enemy.jumpTargetY * TILE_SIZE;
+            
+            // Interpolation de la position
+            renderX = startX + (targetX - startX) * progress;
+            renderY = startY + (targetY - startY) * progress;
+            
+            // Arc parabolique pour le saut
+            const jumpHeight = 16 * Math.sin(progress * Math.PI);
+            renderY -= jumpHeight;
+          }
+          
+          if (enemy.type === 'slime') {
+            drawSlime(renderX, renderY, enemyColor, enemy.direction);
+          } else if (enemy.type === 'bat') {
+            drawBat(renderX, renderY, enemyColor, enemy.direction);
+          }
+          
+          // Barre de vie au-dessus de l'ennemi
+          const barWidth = 24;
+          const barHeight = 4;
+          const barX = renderX + (TILE_SIZE - barWidth) / 2;
+          const barY = renderY - 8;
+          
+          // Fond de la barre
+          ctx.fillStyle = '#000';
+          ctx.fillRect(barX - 1, barY - 1, barWidth + 2, barHeight + 2);
+          
+          // Barre de fond (rouge)
+          ctx.fillStyle = '#440000';
+          ctx.fillRect(barX, barY, barWidth, barHeight);
+          
+          // Barre de vie (proportion actuelle)
+          const healthPercent = enemy.health / enemy.maxHealth;
+          ctx.fillStyle = healthPercent > 0.5 ? '#00ff00' : healthPercent > 0.25 ? '#ffff00' : '#ff0000';
+          ctx.fillRect(barX, barY, barWidth * healthPercent, barHeight);
+        }
+      });
+      
+      drawHero(
+        gameState.player.renderX,
+        gameState.player.renderY,
+        heroColor,
+        gameState.player.direction
+      );
+      
+      if (gameState.shielding) {
+        ctx.strokeStyle = '#4169e1';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(
+          gameState.player.renderX + TILE_SIZE / 2,
+          gameState.player.renderY + TILE_SIZE / 2,
+          18,
+          0,
+          Math.PI * 2
+        );
+        ctx.stroke();
+      }
+      
+      if (gameState.attacking) {
+        const dir = gameState.player.direction;
+        let swordX = gameState.player.renderX + TILE_SIZE / 2;
+        let swordY = gameState.player.renderY + TILE_SIZE / 2;
+        
+        if (dir === 'up') {
+          // Lame
+          ctx.fillStyle = '#e0e0e0';
+          ctx.fillRect(swordX - 2, swordY - 20, 4, 14);
+          // Reflet
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(swordX - 1, swordY - 19, 1, 12);
+          // Pointe
+          ctx.fillStyle = '#c0c0c0';
+          ctx.fillRect(swordX - 1, swordY - 21, 2, 2);
+          // Garde
+          ctx.fillStyle = '#ffd700';
+          ctx.fillRect(swordX - 4, swordY - 6, 8, 2);
+          // Poignée
+          ctx.fillStyle = '#8b4513';
+          ctx.fillRect(swordX - 2, swordY - 4, 4, 4);
+        } else if (dir === 'down') {
+          // Lame
+          ctx.fillStyle = '#e0e0e0';
+          ctx.fillRect(swordX - 2, swordY + 6, 4, 14);
+          // Reflet
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(swordX, swordY + 7, 1, 12);
+          // Pointe
+          ctx.fillStyle = '#c0c0c0';
+          ctx.fillRect(swordX - 1, swordY + 19, 2, 2);
+          // Garde
+          ctx.fillStyle = '#ffd700';
+          ctx.fillRect(swordX - 4, swordY + 4, 8, 2);
+          // Poignée
+          ctx.fillStyle = '#8b4513';
+          ctx.fillRect(swordX - 2, swordY, 4, 4);
+        } else if (dir === 'left') {
+          // Lame
+          ctx.fillStyle = '#e0e0e0';
+          ctx.fillRect(swordX - 20, swordY - 2, 14, 4);
+          // Reflet
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(swordX - 19, swordY - 1, 12, 1);
+          // Pointe
+          ctx.fillStyle = '#c0c0c0';
+          ctx.fillRect(swordX - 21, swordY - 1, 2, 2);
+          // Garde
+          ctx.fillStyle = '#ffd700';
+          ctx.fillRect(swordX - 6, swordY - 4, 2, 8);
+          // Poignée
+          ctx.fillStyle = '#8b4513';
+          ctx.fillRect(swordX - 4, swordY - 2, 4, 4);
+        } else {
+          // Lame
+          ctx.fillStyle = '#e0e0e0';
+          ctx.fillRect(swordX + 6, swordY - 2, 14, 4);
+          // Reflet
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(swordX + 7, swordY, 12, 1);
+          // Pointe
+          ctx.fillStyle = '#c0c0c0';
+          ctx.fillRect(swordX + 19, swordY - 1, 2, 2);
+          // Garde
+          ctx.fillStyle = '#ffd700';
+          ctx.fillRect(swordX + 4, swordY - 4, 2, 8);
+          // Poignée
+          ctx.fillStyle = '#8b4513';
+          ctx.fillRect(swordX, swordY - 2, 4, 4);
+        }
+      }
+    }
+
+    function updateStats() {
+      const heartsContainer = document.getElementById('hearts');
+      heartsContainer.innerHTML = '';
+      
+      for (let i = 0; i < gameState.player.maxHealth; i++) {
+        const heart = document.createElement('span');
+        heart.className = 'heart';
+        heart.textContent = i < gameState.player.health ? '♥' : '♡';
+        heartsContainer.appendChild(heart);
+      }
+      
+      document.getElementById('beers').textContent = gameState.player.beers;
+    }
+
+    let lastEnemyMove = Date.now();
+    let gameWon = false;
+    let gameOver = false;
+    
+    function checkWinCondition() {
+      const allEnemiesDead = gameState.enemies.every(e => e.health <= 0);
+      const allBeersCollected = gameState.beers.length === 0;
+      
+      if (allEnemiesDead && allBeersCollected && !gameWon) {
+        gameWon = true;
+        showVictoryScreen();
+      }
+    }
+    
+    function checkGameOver() {
+      if (gameState.player.health <= 0 && !gameOver) {
+        gameOver = true;
+        showGameOverScreen();
+      }
+    }
+    
+    function showGameOverScreen() {
+      const currentConfig = window.elementSdk?.config || defaultConfig;
+      const heroColor = currentConfig.hero_color || defaultConfig.hero_color;
+      
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.9)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      ctx.fillStyle = '#FF0000';
+      ctx.font = '32px "Press Start 2P", monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('GAME OVER', canvas.width / 2, 80);
+      
+      // Dessiner le héros triste au centre
+      const heroX = canvas.width / 2 - 16;
+      const heroY = canvas.height / 2 - 60;
+      
+      // Tête triste
+      ctx.fillStyle = '#ffd4a3';
+      ctx.fillRect(heroX + 10, heroY + 6, 12, 10);
+      
+      // Cheveux/Casque
+      ctx.fillStyle = heroColor;
+      ctx.fillRect(heroX + 10, heroY + 4, 12, 4);
+      ctx.fillRect(heroX + 8, heroY + 6, 2, 4);
+      ctx.fillRect(heroX + 22, heroY + 6, 2, 4);
+      
+      // Yeux tristes
+      ctx.fillStyle = '#000';
+      ctx.fillRect(heroX + 12, heroY + 10, 2, 3);
+      ctx.fillRect(heroX + 18, heroY + 10, 2, 3);
+      ctx.fillRect(heroX + 11, heroY + 12, 1, 1);
+      ctx.fillRect(heroX + 14, heroY + 12, 1, 1);
+      ctx.fillRect(heroX + 17, heroY + 12, 1, 1);
+      ctx.fillRect(heroX + 20, heroY + 12, 1, 1);
+      
+      // Bouche triste
+      ctx.fillRect(heroX + 13, heroY + 14, 6, 1);
+      ctx.fillRect(heroX + 13, heroY + 13, 1, 1);
+      ctx.fillRect(heroX + 18, heroY + 13, 1, 1);
+      
+      // Corps
+      ctx.fillStyle = heroColor;
+      ctx.fillRect(heroX + 9, heroY + 16, 14, 8);
+      
+      // Bras gauche avec eau
+      ctx.fillStyle = '#ffd4a3';
+      ctx.fillRect(heroX + 5, heroY + 17, 4, 8);
+      
+      // Verre d'eau dans la main gauche
+      ctx.fillStyle = 'rgba(173, 216, 230, 0.6)';
+      ctx.fillRect(heroX + 2, heroY + 20, 6, 8);
+      ctx.strokeStyle = '#87CEEB';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(heroX + 2, heroY + 20, 6, 8);
+      // Reflet d'eau
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+      ctx.fillRect(heroX + 3, heroY + 22, 2, 4);
+      
+      // Bras droit avec légumes
+      ctx.fillStyle = '#ffd4a3';
+      ctx.fillRect(heroX + 23, heroY + 17, 4, 8);
+      
+      // Carotte dans la main droite
+      ctx.fillStyle = '#FF8C00';
+      ctx.fillRect(heroX + 27, heroY + 21, 6, 3);
+      ctx.fillRect(heroX + 28, heroY + 20, 4, 1);
+      ctx.fillRect(heroX + 29, heroY + 19, 2, 1);
+      // Fanes de carotte
+      ctx.fillStyle = '#228B22';
+      ctx.fillRect(heroX + 27, heroY + 19, 1, 2);
+      ctx.fillRect(heroX + 28, heroY + 18, 1, 2);
+      ctx.fillRect(heroX + 29, heroY + 17, 1, 2);
+      
+      // Brocoli à côté
+      ctx.fillStyle = '#3d6b1f';
+      ctx.fillRect(heroX + 33, heroY + 22, 4, 3);
+      ctx.fillRect(heroX + 34, heroY + 21, 2, 1);
+      ctx.fillStyle = '#4a7c26';
+      ctx.fillRect(heroX + 34, heroY + 22, 1, 1);
+      ctx.fillRect(heroX + 36, heroY + 22, 1, 1);
+      
+      // Jambes
+      ctx.fillStyle = '#654321';
+      ctx.fillRect(heroX + 10, heroY + 24, 5, 4);
+      ctx.fillRect(heroX + 17, heroY + 24, 5, 4);
+      
+      // Pieds
+      ctx.fillStyle = '#8B4513';
+      ctx.fillRect(heroX + 10, heroY + 28, 5, 2);
+      ctx.fillRect(heroX + 17, heroY + 28, 5, 2);
+      
+      // Nuages de tristesse
+      ctx.fillStyle = '#555';
+      ctx.fillRect(heroX - 15, heroY + 5, 8, 4);
+      ctx.fillRect(heroX - 17, heroY + 7, 12, 3);
+      ctx.fillRect(heroX + 39, heroY + 8, 8, 4);
+      ctx.fillRect(heroX + 37, heroY + 10, 12, 3);
+      
+      ctx.fillStyle = '#888';
+      ctx.font = '14px "Press Start 2P", monospace';
+      ctx.fillText('Régime forcé...', canvas.width / 2, canvas.height / 2 + 60);
+      
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '12px "Press Start 2P", monospace';
+      ctx.fillText('Cliquez pour rejouer', canvas.width / 2, canvas.height - 60);
+      
+      canvas.style.cursor = 'pointer';
+    }
+    
+    function showVictoryScreen() {
+      const currentConfig = window.elementSdk?.config || defaultConfig;
+      const bgColor = currentConfig.background_color || defaultConfig.background_color;
+      const heroColor = currentConfig.hero_color || defaultConfig.hero_color;
+      
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      ctx.fillStyle = '#FFD700';
+      ctx.font = '32px "Press Start 2P", monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('VICTOIRE!', canvas.width / 2, 80);
+      
+      // Dessiner le héros heureux au centre
+      const heroX = canvas.width / 2 - 16;
+      const heroY = canvas.height / 2 - 60;
+      
+      // Tête avec sourire
+      ctx.fillStyle = '#ffd4a3';
+      ctx.fillRect(heroX + 10, heroY + 6, 12, 10);
+      
+      // Cheveux/Casque
+      ctx.fillStyle = heroColor;
+      ctx.fillRect(heroX + 10, heroY + 4, 12, 4);
+      ctx.fillRect(heroX + 8, heroY + 6, 2, 4);
+      ctx.fillRect(heroX + 22, heroY + 6, 2, 4);
+      
+      // Yeux heureux (fermés)
+      ctx.fillStyle = '#000';
+      ctx.fillRect(heroX + 12, heroY + 10, 3, 1);
+      ctx.fillRect(heroX + 17, heroY + 10, 3, 1);
+      ctx.fillRect(heroX + 11, heroY + 9, 1, 1);
+      ctx.fillRect(heroX + 14, heroY + 9, 1, 1);
+      ctx.fillRect(heroX + 17, heroY + 9, 1, 1);
+      ctx.fillRect(heroX + 19, heroY + 9, 1, 1);
+      
+      // Grand sourire
+      ctx.fillRect(heroX + 12, heroY + 13, 8, 1);
+      ctx.fillRect(heroX + 13, heroY + 14, 6, 1);
+      
+      // Corps
+      ctx.fillStyle = heroColor;
+      ctx.fillRect(heroX + 9, heroY + 16, 14, 8);
+      
+      // Bras gauche avec bière
+      ctx.fillStyle = '#ffd4a3';
+      ctx.fillRect(heroX + 5, heroY + 17, 4, 8);
+      
+      // Bière dans la main gauche
+      ctx.fillStyle = '#FFA500';
+      ctx.fillRect(heroX + 2, heroY + 20, 6, 8);
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(heroX + 2, heroY + 18, 6, 3);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+      ctx.fillRect(heroX + 3, heroY + 22, 2, 4);
+      
+      // Bras droit avec saucisson
+      ctx.fillStyle = '#ffd4a3';
+      ctx.fillRect(heroX + 23, heroY + 17, 4, 8);
+      
+      // Saucisson dans la main droite
+      ctx.fillStyle = '#8B4513';
+      ctx.fillRect(heroX + 27, heroY + 20, 8, 4);
+      // Texture du saucisson
+      ctx.fillStyle = '#A0522D';
+      ctx.fillRect(heroX + 28, heroY + 21, 1, 2);
+      ctx.fillRect(heroX + 30, heroY + 21, 1, 2);
+      ctx.fillRect(heroX + 32, heroY + 21, 1, 2);
+      ctx.fillRect(heroX + 34, heroY + 21, 1, 2);
+      // Bout du saucisson
+      ctx.fillStyle = '#D2691E';
+      ctx.fillRect(heroX + 27, heroY + 21, 1, 2);
+      
+      // Jambes
+      ctx.fillStyle = '#654321';
+      ctx.fillRect(heroX + 10, heroY + 24, 5, 4);
+      ctx.fillRect(heroX + 17, heroY + 24, 5, 4);
+      
+      // Pieds
+      ctx.fillStyle = '#8B4513';
+      ctx.fillRect(heroX + 10, heroY + 28, 5, 2);
+      ctx.fillRect(heroX + 17, heroY + 28, 5, 2);
+      
+      // Étoiles de célébration
+      ctx.fillStyle = '#FFD700';
+      const sparkles = [
+        {x: heroX - 20, y: heroY + 10},
+        {x: heroX + 42, y: heroY + 15},
+        {x: heroX - 15, y: heroY + 30},
+        {x: heroX + 45, y: heroY + 35}
+      ];
+      sparkles.forEach(s => {
+        ctx.fillRect(s.x, s.y, 3, 3);
+        ctx.fillRect(s.x + 1, s.y - 2, 1, 7);
+        ctx.fillRect(s.x - 2, s.y + 1, 7, 1);
+      });
+      
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '14px "Press Start 2P", monospace';
+      ctx.fillText('Apéro time!', canvas.width / 2, canvas.height / 2 + 60);
+      
+      ctx.font = '12px "Press Start 2P", monospace';
+      ctx.fillText('Cliquez pour rejouer', canvas.width / 2, canvas.height - 60);
+      
+      canvas.style.cursor = 'pointer';
+    }
+    
+    function resetGame() {
+      gameWon = false;
+      gameOver = false;
+      canvas.style.cursor = 'default';
+      
+      gameState.player = { 
+        x: 7, y: 10, 
+        renderX: 7 * TILE_SIZE, renderY: 10 * TILE_SIZE,
+        direction: 'up', health: 3, maxHealth: 3, beers: 0,
+        moving: false
+      };
+      gameState.enemies = [
+        { x: 3, y: 3, renderX: 3 * TILE_SIZE, renderY: 3 * TILE_SIZE, type: 'slime', direction: 'right', health: 3, maxHealth: 3 },
+        { x: 12, y: 5, renderX: 12 * TILE_SIZE, renderY: 5 * TILE_SIZE, type: 'bat', direction: 'left', health: 3, maxHealth: 3 },
+        { x: 8, y: 3, renderX: 8 * TILE_SIZE, renderY: 3 * TILE_SIZE, type: 'slime', direction: 'down', health: 3, maxHealth: 3 }
+      ];
+      gameState.beers = [
+        { x: 2, y: 2 },
+        { x: 13, y: 2 },
+        { x: 7, y: 6 }
+      ];
+      gameState.tallGrass = [
+        { x: 3, y: 7 }, { x: 4, y: 7 }, { x: 5, y: 8 },
+        { x: 11, y: 8 }, { x: 12, y: 8 }, { x: 13, y: 9 },
+        { x: 2, y: 10 }, { x: 3, y: 11 }, { x: 4, y: 10 },
+        { x: 9, y: 9 }, { x: 10, y: 10 }, { x: 11, y: 9 },
+        { x: 6, y: 4 }, { x: 7, y: 5 }, { x: 8, y: 4 }
+      ];
+      gameState.attacking = false;
+      gameState.shielding = false;
+      
+      updateStats();
+    }
+    
+    function gameLoop() {
+      const currentConfig = window.elementSdk?.config || defaultConfig;
+      
+      if (!gameWon && !gameOver) {
+        updatePositions();
+        render(currentConfig);
+        
+        if (Date.now() - lastEnemyMove > 800) {
+          moveEnemies();
+          lastEnemyMove = Date.now();
+        }
+        
+        checkWinCondition();
+        checkGameOver();
+      } else if (gameWon) {
+        showVictoryScreen();
+      } else if (gameOver) {
+        showGameOverScreen();
+      }
+      
+      requestAnimationFrame(gameLoop);
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (keys[e.key]) return; // Éviter la répétition
+      keys[e.key] = true;
+      
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        movePlayer(0, -1);
+      }
+      else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        movePlayer(0, 1);
+      }
+      else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        movePlayer(-1, 0);
+      }
+      else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        movePlayer(1, 0);
+      }
+      else if (e.key === ' ' || e.key === 'z' || e.key === 'Z') {
+        e.preventDefault();
+        attack();
+      }
+    });
+
+    document.addEventListener('keyup', (e) => {
+      keys[e.key] = false;
+    });
+
+    document.querySelectorAll('.dpad-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const key = btn.dataset.key;
+        if (key === 'up') movePlayer(0, -1);
+        else if (key === 'down') movePlayer(0, 1);
+        else if (key === 'left') movePlayer(-1, 0);
+        else if (key === 'right') movePlayer(1, 0);
+      });
+    });
+
+    document.querySelectorAll('.action-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const key = btn.dataset.key;
+        if (key === 'attack') attack();
+        else if (key === 'use') {
+          if (!gameState.shielding) {
+            gameState.shielding = true;
+            setTimeout(() => {
+              gameState.shielding = false;
+            }, 1000);
+          }
+        }
+      });
+    });
+
+    // Contrôles souris
+    canvas.addEventListener('click', (e) => {
+      if (gameWon || gameOver) {
+        resetGame();
+      } else {
+        attack();
+      }
+    });
+
+    canvas.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      // Action bouclier - empêche les ennemis d'attaquer temporairement
+      if (!gameState.shielding) {
+        gameState.shielding = true;
+        setTimeout(() => {
+          gameState.shielding = false;
+        }, 1000);
+      }
+    });
+
+    async function onConfigChange(config) {
+      const gameTitle = document.getElementById('gameTitle');
+      gameTitle.textContent = (config.game_title || defaultConfig.game_title).toUpperCase();
+      
+      const baseFontSize = config.font_size || defaultConfig.font_size;
+      const fontFamily = config.font_family || defaultConfig.font_family;
+      const baseFontStack = 'Press Start 2P, Courier New, monospace';
+      
+      gameTitle.style.fontSize = `${baseFontSize}px`;
+      gameTitle.style.fontFamily = `${fontFamily}, ${baseFontStack}`;
+      
+      document.querySelectorAll('.stat-item').forEach(el => {
+        el.style.fontSize = `${baseFontSize * 0.75}px`;
+        el.style.fontFamily = `${fontFamily}, ${baseFontStack}`;
+      });
+      
+      document.querySelectorAll('.control-label').forEach(el => {
+        el.style.fontSize = `${baseFontSize * 0.625}px`;
+        el.style.fontFamily = `${fontFamily}, ${baseFontStack}`;
+      });
+      
+      render(config);
+    }
+
+    if (window.elementSdk) {
+      window.elementSdk.init({
+        defaultConfig,
+        onConfigChange,
+        mapToCapabilities: (config) => ({
+          recolorables: [
+            {
+              get: () => config.background_color || defaultConfig.background_color,
+              set: (value) => {
+                config.background_color = value;
+                window.elementSdk.setConfig({ background_color: value });
+              }
+            },
+            {
+              get: () => config.wall_color || defaultConfig.wall_color,
+              set: (value) => {
+                config.wall_color = value;
+                window.elementSdk.setConfig({ wall_color: value });
+              }
+            },
+            {
+              get: () => config.hero_color || defaultConfig.hero_color,
+              set: (value) => {
+                config.hero_color = value;
+                window.elementSdk.setConfig({ hero_color: value });
+              }
+            },
+            {
+              get: () => config.enemy_color || defaultConfig.enemy_color,
+              set: (value) => {
+                config.enemy_color = value;
+                window.elementSdk.setConfig({ enemy_color: value });
+              }
+            },
+            {
+              get: () => config.gem_color || defaultConfig.gem_color,
+              set: (value) => {
+                config.gem_color = value;
+                window.elementSdk.setConfig({ gem_color: value });
+              }
+            }
+          ],
+          borderables: [],
+          fontEditable: {
+            get: () => config.font_family || defaultConfig.font_family,
+            set: (value) => {
+              config.font_family = value;
+              window.elementSdk.setConfig({ font_family: value });
+            }
+          },
+          fontSizeable: {
+            get: () => config.font_size || defaultConfig.font_size,
+            set: (value) => {
+              config.font_size = value;
+              window.elementSdk.setConfig({ font_size: value });
+            }
+          }
+        }),
+        mapToEditPanelValues: (config) => new Map([
+          ['game_title', config.game_title || defaultConfig.game_title],
+          ['hero_name', config.hero_name || defaultConfig.hero_name]
+        ])
+      });
+    }
+
+    updateStats();
+    gameLoop();
+  </script>
+  </div>
+  </body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9a8eb7aeb3826fa0',t:'MTc2NDg4NzEwMy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
