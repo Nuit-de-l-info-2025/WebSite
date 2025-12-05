@@ -1,0 +1,1851 @@
+<!doctype html>
+<html lang="fr">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Apéro Snake</title>
+  <script src="/_sdk/element_sdk.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Ubuntu:wght@300;400;500;700&display=swap');
+
+    body {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      body {
+        overflow-x: hidden;
+        overflow-y: auto;
+     }
+      font-family: 'Ubuntu', sans-serif;
+    }
+
+    html {
+      height: 100%;
+      width: 100%;
+    }
+
+    .game-wrapper {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #2C001E 0%, #1a0012 100%);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .game-wrapper::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: 
+        radial-gradient(circle at 20% 30%, rgba(233, 84, 32, 0.08) 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(119, 41, 83, 0.1) 0%, transparent 50%);
+      pointer-events: none;
+    }
+
+    .main-content {
+      position: absolute;
+      left: 64px;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .menu-screen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+      padding-left: 64px;
+      padding-top: 0;
+    }
+
+    .menu-screen.hidden {
+      display: none;
+    }
+
+    .ubuntu-window {
+      background: #f6f5f4;
+      border-radius: 12px 12px 0 0;
+      box-shadow: 0 8px 0 rgba(0, 0, 0, 0.5);
+      max-width: 700px;
+      width: 90%;
+      overflow: hidden;
+    }
+
+    .window-titlebar {
+      background: #e1dedb;
+      height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 12px;
+      border-bottom: 1px solid #d5d3cf;
+    }
+
+    .window-controls {
+      display: flex;
+      gap: 8px;
+    }
+
+    .window-control-btn {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      border: none;
+    }
+
+    .window-control-btn.close {
+      background: #ff6054;
+    }
+
+    .window-control-btn.minimize {
+      background: #ffbd2e;
+    }
+
+    .window-control-btn.maximize {
+      background: #27c73f;
+    }
+
+    .window-control-btn:hover {
+      filter: brightness(1.2);
+      transform: scale(1.1);
+    }
+
+    .window-title {
+      font-size: 13px;
+      font-weight: 500;
+      color: #3d3846;
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .window-content {
+      background: #ffffff;
+      padding: 40px;
+      text-align: center;
+    }
+
+    .menu-title {
+      font-size: 3.5em;
+      font-weight: 500;
+      color: #E95420;
+      margin-bottom: 20px;
+      letter-spacing: -1px;
+    }
+
+    .menu-button {
+      padding: 12px 40px;
+      font-size: 1.1em;
+      font-weight: 500;
+      color: #ffffff;
+      background: #E95420;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+      transition: all 0.15s ease;
+      margin: 6px;
+      min-width: 200px;
+    }
+
+    .menu-button:hover {
+      background: #EB6536;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+    }
+
+    .menu-button:active {
+      transform: scale(0.98);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    }
+
+    .menu-button.secondary {
+      background: #ffffff;
+      color: #3d3846;
+      border: 1px solid #d5d3cf;
+    }
+
+    .menu-button.secondary:hover {
+      background: #f6f5f4;
+      border-color: #c0bfbc;
+    }
+
+    .game-area {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      padding-left: 64px;
+      padding-top: 0;
+    }
+
+    .game-area.active {
+      display: flex;
+    }
+
+    .game-title {
+      font-size: 2em;
+      font-weight: 500;
+      color: #ffffff;
+      position: relative;
+      z-index: 10;
+      letter-spacing: -0.5px;
+    }
+
+    #gameCanvas {
+      border: 1px solid rgba(233, 84, 32, 0.3);
+      box-shadow: 
+        0 8px 24px rgba(0, 0, 0, 0.4),
+        0 0 0 1px rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+      background: #2d2d2d;
+      position: relative;
+      z-index: 10;
+      transition: all 0.2s ease;
+      width: 90vw;
+      height: 90vw;
+      max-width: 600px;
+      max-height: 600px;
+    }
+
+    #gameCanvas:hover {
+      box-shadow: 
+        0 12px 32px rgba(0, 0, 0, 0.5),
+        0 0 0 1px rgba(233, 84, 32, 0.3);
+    }
+
+    #gameCanvas.mega-mode {
+      animation: megaPulse 0.5s ease-in-out infinite;
+      border-color: #E95420;
+    }
+
+    #gameCanvas.destroyer-mode {
+      animation: destroyerPulse 0.3s ease-in-out infinite;
+      border-color: #ff4500;
+    }
+
+    @keyframes megaPulse {
+      0%, 100% {
+        box-shadow: 
+          0 8px 24px rgba(0, 0, 0, 0.4),
+          0 0 20px rgba(233, 84, 32, 0.5);
+      }
+      50% {
+        box-shadow: 
+          0 8px 24px rgba(0, 0, 0, 0.4),
+          0 0 30px rgba(233, 84, 32, 0.8);
+      }
+    }
+
+    @keyframes destroyerPulse {
+      0%, 100% {
+        box-shadow: 
+          0 8px 24px rgba(0, 0, 0, 0.4),
+          0 0 20px rgba(255, 69, 0, 0.6);
+      }
+      50% {
+        box-shadow: 
+          0 8px 24px rgba(0, 0, 0, 0.4),
+          0 0 35px rgba(255, 69, 0, 0.9);
+      }
+    }
+
+    .controls-panel {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .game-button {
+      padding: 12px 32px;
+      font-size: 1.1em;
+      font-weight: 500;
+      color: #ffffff;
+      background: #E95420;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(233, 84, 32, 0.3);
+      transition: all 0.2s ease;
+    }
+
+    .game-button:hover {
+      background: #EB6536;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px rgba(233, 84, 32, 0.4);
+    }
+
+    .score-display {
+      font-size: 1.3em;
+      font-weight: 400;
+      color: #ffffff;
+      padding: 10px 24px;
+      background: rgba(45, 45, 45, 0.8);
+      border: 1px solid rgba(233, 84, 32, 0.3);
+      border-radius: 6px;
+      backdrop-filter: blur(10px);
+    }
+
+    .game-over-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(44, 0, 30, 0.95);
+      backdrop-filter: blur(10px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      z-index: 100;
+    }
+
+    .game-over-overlay.active {
+      display: flex;
+    }
+
+    .game-over-text {
+      font-size: 3.5em;
+      font-weight: 500;
+      color: #E95420;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+      margin-bottom: 20px;
+    }
+
+    .final-score {
+      font-size: 1.8em;
+      font-weight: 400;
+      color: #ffffff;
+      margin-bottom: 30px;
+    }
+
+    .instructions {
+      color: #5e5c64;
+      font-size: 1em;
+      font-weight: 400;
+      margin: 20px 0;
+      text-align: left;
+      max-width: 600px;
+      line-height: 1.8;
+      background: #f6f5f4;
+      padding: 20px;
+      border-radius: 8px;
+      border-left: 4px solid #E95420;
+    }
+
+    .instructions p {
+      margin: 8px 0;
+    }
+
+    .shop-screen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      z-index: 50;
+      overflow-y: auto;
+      padding: 60px 20px 40px 84px;
+    }
+
+    .shop-screen.active {
+      display: flex;
+    }
+
+    .shop-container {
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+      max-width: 1100px;
+      width: 100%;
+      padding: 32px;
+    }
+
+    .shop-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      padding-bottom: 20px;
+      border-bottom: 2px solid #f6f5f4;
+    }
+
+    .shop-title {
+      font-size: 2.5em;
+      font-weight: 500;
+      color: #3d3846;
+      margin: 0;
+      letter-spacing: -0.5px;
+    }
+
+    .shop-coins {
+      font-size: 1.5em;
+      font-weight: 500;
+      color: #E95420;
+      background: #fef5f1;
+      padding: 10px 20px;
+      border-radius: 8px;
+      border: 2px solid #fde7df;
+    }
+
+    .shop-categories {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 30px;
+      flex-wrap: wrap;
+      background: #f6f5f4;
+      padding: 6px;
+      border-radius: 8px;
+    }
+
+    .category-btn {
+      padding: 10px 24px;
+      font-size: 1em;
+      font-weight: 500;
+      color: #3d3846;
+      background: transparent;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .category-btn.active {
+      background: #ffffff;
+      color: #E95420;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .category-btn:hover {
+      background: #ffffff;
+    }
+
+    .shop-items {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      width: 100%;
+      margin-bottom: 30px;
+    }
+
+    .shop-item {
+      background: #ffffff;
+      border: 2px solid #e1dedb;
+      border-radius: 10px;
+      padding: 20px;
+      text-align: center;
+      transition: all 0.2s ease;
+      cursor: pointer;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .shop-item:hover {
+      transform: translateY(-3px);
+      border-color: #c0bfbc;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .shop-item.owned {
+      border-color: #27c73f;
+      background: #f6fdf7;
+    }
+
+    .shop-item.equipped {
+      border-color: #E95420;
+      background: #fef5f1;
+      box-shadow: 0 2px 8px rgba(233, 84, 32, 0.2);
+    }
+
+    .item-preview {
+      width: 100%;
+      height: 90px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 12px;
+      font-size: 2.8em;
+      background: #f6f5f4;
+      border-radius: 8px;
+    }
+
+    .item-name {
+      font-size: 1em;
+      font-weight: 500;
+      color: #3d3846;
+      margin-bottom: 8px;
+    }
+
+    .item-price {
+      font-size: 0.95em;
+      font-weight: 500;
+      color: #E95420;
+      margin-bottom: 12px;
+    }
+
+    .item-btn {
+      padding: 8px 20px;
+      font-size: 0.9em;
+      font-weight: 500;
+      color: #ffffff;
+      background: #E95420;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      width: 100%;
+    }
+
+    .item-btn:hover {
+      background: #EB6536;
+    }
+
+    .item-btn.owned {
+      background: #27c73f;
+      color: #ffffff;
+    }
+
+    .item-btn.equipped {
+      background: #3d3846;
+      color: #ffffff;
+    }
+
+    .shop-back-btn {
+      padding: 10px 28px;
+      font-size: 1em;
+      font-weight: 500;
+      color: #3d3846;
+      background: #ffffff;
+      border: 2px solid #e1dedb;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      margin-top: 20px;
+    }
+
+    .shop-back-btn:hover {
+      background: #f6f5f4;
+      border-color: #c0bfbc;
+    }
+
+    .particle {
+      position: absolute;
+      pointer-events: none;
+      font-size: 24px;
+      animation: floatParticle 1s ease-out forwards;
+      z-index: 200;
+      --tx: 0px;
+      --ty: -80px;
+    }
+
+    @keyframes floatParticle {
+      0% {
+        opacity: 1;
+        transform: translate(0, 0) scale(1) rotate(0deg);
+      }
+      100% {
+        opacity: 0;
+        transform: translate(var(--tx), var(--ty)) scale(1.5) rotate(360deg);
+      }
+    }
+    
+    @keyframes effectPop {
+      0% {
+        transform: translate(-50%, -50%) scale(0.5);
+      }
+      50% {
+        transform: translate(-50%, -50%) scale(1.1);
+      }
+      100% {
+        transform: translate(-50%, -50%) scale(1);
+      }
+    }
+
+    .coin-popup {
+      position: fixed;
+      transform: translate(-50%, -50%);
+      font-size: 2.5em;
+      font-weight: bold;
+      color: #ffd700;
+      text-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+      z-index: 200;
+      pointer-events: none;
+      animation: coinPopup 0.8s ease-out forwards;
+    }
+
+    @keyframes coinPopup {
+      0% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(0.5);
+      }
+      50% {
+        transform: translate(-50%, -50%) scale(1.3);
+      }
+      100% {
+        opacity: 0;
+        transform: translate(-50%, -150%) scale(1);
+      }
+    }
+
+    @keyframes obstacleShake {
+      0%, 100% { transform: translate(0, 0) rotate(0deg); }
+      25% { transform: translate(-2px, 2px) rotate(-2deg); }
+      75% { transform: translate(2px, -2px) rotate(2deg); }
+    }
+
+    @media (max-width: 768px) {
+    .menu-screen,
+    .game-area,
+    .shop-screen {
+        padding-left: 0 !important;
+        padding-top: 20px !important;
+    }
+
+    @media (max-width: 500px) {
+    .shop-items {
+        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    }
+    }
+
+    @media (max-width: 500px) {
+    .menu-button,
+    .game-button {
+        padding: 10px 20px;
+        font-size: 0.9em;
+        min-width: 150px;
+    }
+
+    .menu-title {
+        font-size: 2em;
+    }
+    }
+
+
+
+    .ubuntu-window {
+        width: 95%;
+    }
+
+    .menu-title {
+        font-size: 2.2em;
+    }
+
+    .controls-panel {
+        flex-direction: column;
+        gap: 10px;
+    }
+    }
+
+  </style>
+  <style>@view-transition { navigation: auto; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+  <script src="https://cdn.tailwindcss.com" type="text/javascript"></script>
+ </head>
+ <body>
+  <div class="game-wrapper">
+   <div class="main-content">
+    <div class="menu-screen" id="menuScreen">
+     <div class="ubuntu-window">
+      <div class="window-titlebar">
+       <div class="window-controls"><button class="window-control-btn close"></button> <button class="window-control-btn minimize"></button> <button class="window-control-btn maximize"></button>
+       </div>
+       <div class="window-title">
+        Apéro Snake - Menu Principal
+       </div>
+      </div>
+      <div class="window-content">
+       <h1 class="menu-title">🐍 APÉRO SNAKE 🍺</h1>
+       <div class="instructions">
+        <p>🎮 Utilisez les <strong>FLÈCHES</strong> pour diriger le serpent</p>
+        <p>🧀 Mangez la nourriture pour grandir</p>
+        <p>💰 Gagnez des pièces pour la boutique</p>
+        <p>🪨 Attention aux obstacles (à partir du niveau 2) !</p>
+        <p>🔥 Le destructeur permet de détruire les obstacles</p>
+        <p>⚠️ Évitez les murs et votre propre queue !</p>
+       </div><button class="menu-button" id="playButton">JOUER</button> <button class="menu-button secondary" id="shopButton">🛒 BOUTIQUE</button>
+      </div>
+     </div>
+    </div>
+    <div class="shop-screen" id="shopScreen">
+     <div class="shop-container">
+      <div class="shop-header">
+       <h1 class="shop-title">🛒 Boutique Apéro</h1>
+       <div class="shop-coins">
+        💰 <span id="coinsDisplay">0</span>
+       </div>
+      </div>
+      <div class="shop-categories"><button class="category-btn active" data-category="skins">🐍 Skins</button> <button class="category-btn" data-category="hats">🎩 Accessoires</button> <button class="category-btn" data-category="foods">🍷 Nourriture</button>
+      </div>
+      <div class="shop-items" id="shopItems"></div><button class="shop-back-btn" id="shopBackButton">← Retour au Menu</button>
+     </div>
+    </div>
+    <div class="game-area" id="gameArea">
+     <div style="position: relative;">
+      <canvas id="gameCanvas" width="600" height="600"></canvas>
+      <div class="game-over-overlay" id="gameOverOverlay">
+       <div class="game-over-text">
+        GAME OVER
+       </div>
+       <div class="final-score" id="finalScore">
+        Score: 0
+       </div>
+       <div style="display: flex; gap: 20px;"><button class="game-button" id="restartButton">Rejouer</button> <button class="game-button" id="backToMenuButton">Menu</button>
+       </div>
+      </div>
+     </div>
+     <div class="controls-panel"><button class="game-button" id="pauseButton">Pause</button>
+      <div class="score-display">
+       <span id="scoreLabel">Score</span>: <span id="scoreValue">0</span>
+      </div>
+      <div class="score-display" style="background: linear-gradient(135deg, rgba(255, 215, 0, 0.3), rgba(255, 165, 0, 0.2));">
+       💰 <span id="gameCoinsDisplay">0</span>
+      </div>
+      <div class="score-display" id="levelDisplay" style="background: linear-gradient(135deg, rgba(255, 0, 255, 0.3), rgba(138, 43, 226, 0.2));">
+       ⭐ Niv. <span id="levelValue">1</span>
+      </div>
+      <div class="score-display" id="obstacleDisplay" style="background: linear-gradient(135deg, rgba(128, 128, 128, 0.3), rgba(139, 69, 19, 0.2));">
+       🪨 <span id="obstacleValue">0</span>
+      </div>
+     </div>
+    </div>
+   </div>
+  </div>
+  <script>
+    const defaultConfig = {
+      game_title: "Apéro Snake",
+      score_label: "Score",
+      background_color: "#2C001E",
+      surface_color: "#2d2d2d",
+      text_color: "#ffffff",
+      primary_action_color: "#E95420",
+      secondary_action_color: "#772953",
+      font_family: "Ubuntu",
+      font_size: 16
+    };
+
+    let config = {};
+
+    async function onConfigChange(newConfig) {
+      const baseFontStack = "Arial, sans-serif";
+      const customFont = newConfig.font_family || defaultConfig.font_family;
+      const baseSize = newConfig.font_size || defaultConfig.font_size;
+      
+      document.getElementById('gameTitle').textContent = newConfig.game_title || defaultConfig.game_title;
+      document.getElementById('gameTitle').style.fontFamily = `${customFont}, ${baseFontStack}`;
+      document.getElementById('gameTitle').style.fontSize = `${baseSize * 2}px`;
+      document.getElementById('gameTitle').style.color = newConfig.text_color || defaultConfig.text_color;
+      
+      document.getElementById('scoreLabel').textContent = newConfig.score_label || defaultConfig.score_label;
+      
+      document.querySelector('.game-wrapper').style.background = `linear-gradient(135deg, ${newConfig.background_color || defaultConfig.background_color}, ${newConfig.secondary_action_color || defaultConfig.secondary_action_color})`;
+      document.getElementById('gameCanvas').style.background = newConfig.surface_color || defaultConfig.surface_color;
+      
+      const buttons = document.querySelectorAll('.game-button, .menu-button:not(.secondary)');
+      buttons.forEach(btn => {
+        btn.style.background = newConfig.primary_action_color || defaultConfig.primary_action_color;
+      });
+    }
+
+    const element = {
+      defaultConfig,
+      onConfigChange,
+      mapToCapabilities: (config) => ({
+        recolorables: [
+          {
+            get: () => config.background_color || defaultConfig.background_color,
+            set: (value) => {
+              config.background_color = value;
+              if (window.elementSdk) window.elementSdk.setConfig({ background_color: value });
+            }
+          },
+          {
+            get: () => config.surface_color || defaultConfig.surface_color,
+            set: (value) => {
+              config.surface_color = value;
+              if (window.elementSdk) window.elementSdk.setConfig({ surface_color: value });
+            }
+          },
+          {
+            get: () => config.text_color || defaultConfig.text_color,
+            set: (value) => {
+              config.text_color = value;
+              if (window.elementSdk) window.elementSdk.setConfig({ text_color: value });
+            }
+          },
+          {
+            get: () => config.primary_action_color || defaultConfig.primary_action_color,
+            set: (value) => {
+              config.primary_action_color = value;
+              if (window.elementSdk) window.elementSdk.setConfig({ primary_action_color: value });
+            }
+          },
+          {
+            get: () => config.secondary_action_color || defaultConfig.secondary_action_color,
+            set: (value) => {
+              config.secondary_action_color = value;
+              if (window.elementSdk) window.elementSdk.setConfig({ secondary_action_color: value });
+            }
+          }
+        ],
+        borderables: [],
+        fontEditable: {
+          get: () => config.font_family || defaultConfig.font_family,
+          set: (value) => {
+            config.font_family = value;
+            if (window.elementSdk) window.elementSdk.setConfig({ font_family: value });
+          }
+        },
+        fontSizeable: {
+          get: () => config.font_size || defaultConfig.font_size,
+          set: (value) => {
+            config.font_size = value;
+            if (window.elementSdk) window.elementSdk.setConfig({ font_size: value });
+          }
+        }
+      }),
+      mapToEditPanelValues: (config) => new Map([
+        ["game_title", config.game_title || defaultConfig.game_title],
+        ["score_label", config.score_label || defaultConfig.score_label]
+      ])
+    };
+
+    if (window.elementSdk) {
+      window.elementSdk.init(element);
+      config = window.elementSdk.config;
+    }
+
+    // JEU SNAKE
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    const GRID_SIZE = 20;
+    const CELL_SIZE = canvas.width / GRID_SIZE;
+    
+    let snake = [];
+    let direction = { x: 1, y: 0 };
+    let food = {};
+    let score = 0;
+    let gameLoop = null;
+    let isGameRunning = false;
+    let isPaused = false;
+    let coins = parseInt(localStorage.getItem('snakeCoins') || '0');
+    let currentCategory = 'skins';
+
+    // Système de boutique
+    const shopItems = {
+      skins: [
+        { id: 'classic', name: 'Classique', price: 0, colors: ['#00ff88', '#00dd77', '#00bb66'], owned: true, equipped: true },
+        { id: 'wine', name: 'Vin Rouge 🍷', price: 15, colors: ['#8b0000', '#a52a2a', '#dc143c'], owned: false, equipped: false },
+        { id: 'cheese', name: 'Fromage 🧀', price: 25, colors: ['#ffd700', '#ffe55c', '#fff0a0'], owned: false, equipped: false },
+        { id: 'pastis', name: 'Pastis Provençal', price: 30, colors: ['#e0de8c', '#e0de8c', '#e0de8c'], owned: false, equipped: false },
+        { id: 'rosé', name: 'Vin Rosé 🌸', price: 20, colors: ['#ff69b4', '#ff85c0', '#ffa0d0'], owned: false, equipped: false },
+        { id: 'tricolore', name: 'Français 🇫🇷​', price: 35, colors: ['#0055a4', '#ffffff', '#ef4135'], owned: false, equipped: false }    
+      ],
+      hats: [
+        { id: 'none', name: 'Aucun', price: 0, icon: '', owned: true, equipped: true },
+        { id: 'beret', name: 'Béret Rouge 🔴', price: 5, icon: '🔴', owned: false, equipped: false },
+        { id: 'mustache', name: 'Moustache', price: 10, icon: '🥸', owned: false, equipped: false },
+        { id: 'baguette', name: 'Baguette', price: 15, icon: '🥖', owned: false, equipped: false },
+        { id: 'croissant', name: 'Croissant', price: 20, icon: '🥐', owned: false, equipped: false },
+        { id: 'wine', name: 'Verre de Vin', price: 25, icon: '🍷', owned: false, equipped: false }
+      ],
+      foods: [
+        { id: 'carott', name: 'Carottes', price: 0, icon: '🥕', owned: true, equipped: true },
+        { id: 'olive', name: 'Olives', price: 3, icon: '🫒', owned: false, equipped: false },
+        { id: 'bread', name: 'Baguette', price: 5, icon: '🥖', owned: false, equipped: false },
+        { id: 'beer', name: 'Bière', price: 10, icon: '🍺', owned: false, equipped: false },
+        { id: 'cheese', name: 'Fromage', price: 15, icon: '🧀', owned: false, equipped: false },
+        { id: 'wine', name: 'Vin Rouge', price: 20, icon: '🍷', owned: false, equipped: false }
+      ]
+    };
+
+    function loadInventory() {
+      const saved = localStorage.getItem('snakeInventory');
+      if (saved) {
+        const inventory = JSON.parse(saved);
+        Object.keys(shopItems).forEach(category => {
+          shopItems[category].forEach(item => {
+            const savedItem = inventory[category]?.find(i => i.id === item.id);
+            if (savedItem) {
+              item.owned = savedItem.owned;
+              item.equipped = savedItem.equipped;
+            }
+          });
+        });
+      }
+    }
+
+    function saveInventory() {
+      localStorage.setItem('snakeInventory', JSON.stringify(shopItems));
+      localStorage.setItem('snakeCoins', coins.toString());
+    }
+
+    loadInventory();
+
+    // Navigation functions
+    function showMenu() {
+      document.getElementById('menuScreen').classList.remove('hidden');
+      document.getElementById('shopScreen').classList.remove('active');
+      document.getElementById('gameArea').classList.remove('active');
+    }
+
+    function showShop() {
+      document.getElementById('menuScreen').classList.add('hidden');
+      document.getElementById('shopScreen').classList.add('active');
+      document.getElementById('gameArea').classList.remove('active');
+      renderShop();
+    }
+
+    function showGame() {
+      document.getElementById('menuScreen').classList.add('hidden');
+      document.getElementById('shopScreen').classList.remove('active');
+      document.getElementById('gameArea').classList.add('active');
+    }
+    
+    function renderShop() {
+      const shopItemsContainer = document.getElementById('shopItems');
+      const coinsDisplay = document.getElementById('coinsDisplay');
+      coinsDisplay.textContent = coins;
+      
+      shopItemsContainer.innerHTML = '';
+      
+      shopItems[currentCategory].forEach(item => {
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'shop-item';
+        if (item.owned) itemDiv.classList.add('owned');
+        if (item.equipped) itemDiv.classList.add('equipped');
+        
+        const preview = document.createElement('div');
+        preview.className = 'item-preview';
+        
+        if (currentCategory === 'skins') {
+          preview.style.background = `linear-gradient(135deg, ${item.colors[0]}, ${item.colors[1]}, ${item.colors[2]})`;
+          preview.style.borderRadius = '10px';
+        } else {
+          preview.textContent = item.icon;
+        }
+        
+        const name = document.createElement('div');
+        name.className = 'item-name';
+        name.textContent = item.name;
+        
+        const price = document.createElement('div');
+        price.className = 'item-price';
+        price.textContent = item.owned ? '✅ Possédé' : `💰 ${item.price} pièces`;
+        
+        const btn = document.createElement('button');
+        btn.className = 'item-btn';
+        if (item.equipped) {
+          btn.textContent = '✨ Équipé';
+          btn.classList.add('equipped');
+        } else if (item.owned) {
+          btn.textContent = 'Équiper';
+          btn.classList.add('owned');
+        } else {
+          btn.textContent = 'Acheter';
+        }
+        
+        btn.onclick = () => handleItemClick(item);
+        
+        itemDiv.appendChild(preview);
+        itemDiv.appendChild(name);
+        itemDiv.appendChild(price);
+        itemDiv.appendChild(btn);
+        shopItemsContainer.appendChild(itemDiv);
+      });
+    }
+
+    function handleItemClick(item) {
+      if (item.equipped) return;
+      
+      if (!item.owned) {
+        if (coins >= item.price) {
+          coins -= item.price;
+          item.owned = true;
+          item.equipped = true;
+          shopItems[currentCategory].forEach(i => {
+            if (i.id !== item.id) i.equipped = false;
+          });
+          saveInventory();
+          renderShop();
+        } else {
+          showMessage('❌ Pas assez de pièces !');
+        }
+      } else {
+        shopItems[currentCategory].forEach(i => i.equipped = false);
+        item.equipped = true;
+        saveInventory();
+        renderShop();
+      }
+    }
+
+    function showMessage(text) {
+      const msg = document.createElement('div');
+      msg.style.cssText = `
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        padding: 20px 40px;
+        background: rgba(0, 0, 0, 0.9);
+        color: #ffffff;
+        font-size: 1.5em;
+        border-radius: 20px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        z-index: 1000;
+        font-weight: bold;
+      `;
+      msg.textContent = text;
+      document.body.appendChild(msg);
+      setTimeout(() => msg.remove(), 2000);
+    }
+
+    function getEquippedSkin() {
+      return shopItems.skins.find(s => s.equipped) || shopItems.skins[0];
+    }
+
+    function getEquippedHat() {
+      return shopItems.hats.find(h => h.equipped) || shopItems.hats[0];
+    }
+
+    function getEquippedFood() {
+      return shopItems.foods.find(f => f.equipped) || shopItems.foods[0];
+    }
+
+    function initGame() {
+      snake = [
+        { x: 10, y: 10 },
+        { x: 9, y: 10 },
+        { x: 8, y: 10 }
+      ];
+      direction = { x: 1, y: 0 };
+      score = 0;
+      specialItems = [];
+      activeEffects = [];
+      obstacles = [];
+      obstacleSpawnTimer = 0;
+      gameStartTime = Date.now();
+      difficultyLevel = 1;
+      document.getElementById('scoreValue').textContent = score;
+      document.getElementById('gameCoinsDisplay').textContent = coins;
+      document.getElementById('obstacleValue').textContent = obstacles.length;
+      spawnFood();
+      isGameRunning = true;
+      isPaused = false;
+    }
+
+    let specialItems = [];
+    let activeEffects = [];
+    let gameStartTime = 0;
+    let difficultyLevel = 1;
+    let obstacles = [];
+    let obstacleSpawnTimer = 0;
+
+    const specialItemTypes = [
+      { 
+        id: 'speed', 
+        icon: '⚡', 
+        name: 'Éclair', 
+        color: '#ffff00',
+        effect: 'speed',
+        baseDuration: 5000,
+        chance: 0.15,
+        basePoints: 25,
+        baseCoins: 2
+      },
+      { 
+        id: 'slow', 
+        icon: '🐌', 
+        name: 'Escargot', 
+        color: '#8b4513',
+        effect: 'slow',
+        baseDuration: 5000,
+        chance: 0.1,
+        basePoints: 30,
+        baseCoins: 2
+      },
+      { 
+        id: 'shrink', 
+        icon: '✂️', 
+        name: 'Ciseaux', 
+        color: '#ff6b6b',
+        effect: 'shrink',
+        baseDuration: 0,
+        chance: 0.12,
+        basePoints: 50,
+        baseCoins: 4
+      },
+      { 
+        id: 'coin', 
+        icon: '💎', 
+        name: 'Diamant', 
+        color: '#00ffff',
+        effect: 'coins',
+        baseDuration: 0,
+        chance: 0.18,
+        basePoints: 20,
+        baseCoins: 5
+      },
+      { 
+        id: 'invincible', 
+        icon: '🛡️', 
+        name: 'Bouclier', 
+        color: '#4169e1',
+        effect: 'invincible',
+        baseDuration: 3000,
+        chance: 0.08,
+        basePoints: 40,
+        baseCoins: 3
+      },
+      { 
+        id: 'double', 
+        icon: '✨', 
+        name: 'Étoile', 
+        color: '#ffd700',
+        effect: 'double',
+        baseDuration: 8000,
+        chance: 0.15,
+        basePoints: 35,
+        baseCoins: 3
+      },
+      { 
+        id: 'triple', 
+        icon: '🌟', 
+        name: 'Super Étoile', 
+        color: '#ff00ff',
+        effect: 'triple',
+        baseDuration: 6000,
+        chance: 0.05,
+        basePoints: 100,
+        baseCoins: 8,
+        minLevel: 3
+      },
+      { 
+        id: 'mega', 
+        icon: '💥', 
+        name: 'Méga Boost', 
+        color: '#ff0000',
+        effect: 'mega',
+        baseDuration: 10000,
+        chance: 0.03,
+        basePoints: 200,
+        baseCoins: 15,
+        minLevel: 5
+      },
+      { 
+        id: 'destroyer', 
+        icon: '🔥', 
+        name: 'Destructeur', 
+        color: '#ff4500',
+        effect: 'destroyer',
+        baseDuration: 5000,
+        chance: 0.1,
+        basePoints: 30,
+        baseCoins: 3,
+        minLevel: 2
+      }
+    ];
+
+    const obstacleTypes = [
+      { id: 'rock', icon: '🪨', name: 'Rocher', color: '#808080' },
+      { id: 'wall', icon: '🧱', name: 'Mur', color: '#8B4513' }
+    ];
+
+    function spawnObstacle() {
+      if (difficultyLevel < 2) return;
+      
+      const maxObstacles = Math.min(2 + difficultyLevel, 8);
+      if (obstacles.length >= maxObstacles) return;
+
+      const obstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
+      
+      let attempts = 0;
+      let pos;
+      do {
+        pos = {
+          x: Math.floor(Math.random() * GRID_SIZE),
+          y: Math.floor(Math.random() * GRID_SIZE)
+        };
+        attempts++;
+      } while (
+        (snake.some(s => s.x === pos.x && s.y === pos.y) || 
+        (food.x === pos.x && food.y === pos.y) ||
+        specialItems.some(item => item.x === pos.x && item.y === pos.y) ||
+        obstacles.some(obs => obs.x === pos.x && obs.y === pos.y)) &&
+        attempts < 100
+      );
+      
+      if (attempts < 100) {
+        obstacles.push({
+          ...pos,
+          type: obstacleType,
+          spawnTime: Date.now()
+        });
+        document.getElementById('obstacleValue').textContent = obstacles.length;
+      }
+    }
+
+    function updateObstacles() {
+      const now = Date.now();
+      const initialLength = obstacles.length;
+      obstacles = obstacles.filter(obs => now - obs.spawnTime < 30000);
+      
+      if (obstacles.length !== initialLength) {
+        document.getElementById('obstacleValue').textContent = obstacles.length;
+      }
+      
+      obstacleSpawnTimer++;
+      if (obstacleSpawnTimer >= 40) {
+        obstacleSpawnTimer = 0;
+        spawnObstacle();
+      }
+    }
+
+    function checkObstacleCollision(x, y) {
+      return obstacles.some(obs => obs.x === x && obs.y === y);
+    }
+
+    function destroyObstacle(x, y) {
+      const index = obstacles.findIndex(obs => obs.x === x && obs.y === y);
+      if (index !== -1) {
+        const multiplier = getDifficultyMultiplier();
+        const points = Math.floor(50 * multiplier);
+        const coinGain = Math.floor(5 * multiplier);
+        
+        score += points;
+        coins += coinGain;
+        saveInventory();
+        document.getElementById('scoreValue').textContent = score;
+        document.getElementById('gameCoinsDisplay').textContent = coins;
+        
+        createParticles(x, y, '💥');
+        showCoinPopup(`+${coinGain} 💰 +${points}pts`);
+        
+        obstacles.splice(index, 1);
+        document.getElementById('obstacleValue').textContent = obstacles.length;
+        return true;
+      }
+      return false;
+    }
+
+    function updateDifficultyLevel() {
+      const elapsed = Date.now() - gameStartTime;
+      const minutes = elapsed / 60000;
+      const newLevel = Math.floor(minutes) + 1;
+      
+      if (newLevel > difficultyLevel) {
+        difficultyLevel = newLevel;
+        document.getElementById('levelValue').textContent = difficultyLevel;
+        showEffectMessage(`🎉 NIVEAU ${difficultyLevel} ! Bonus x${getDifficultyMultiplier().toFixed(1)}`);
+        
+        if (difficultyLevel === 2) {
+          showEffectMessage('🪨 OBSTACLES DÉBLOQUÉS !');
+        }
+      }
+    }
+
+    function getDifficultyMultiplier() {
+      return 1 + (difficultyLevel - 1) * 0.3;
+    }
+
+    function getSpawnChance() {
+      return Math.min(0.3 + (difficultyLevel - 1) * 0.1, 0.8);
+    }
+
+    function spawnFood() {
+      let attempts = 0;
+      do {
+        food = {
+          x: Math.floor(Math.random() * GRID_SIZE),
+          y: Math.floor(Math.random() * GRID_SIZE)
+        };
+        attempts++;
+      } while ((snake.some(s => s.x === food.x && s.y === food.y) || obstacles.some(obs => obs.x === food.x && obs.y === food.y)) && attempts < 100);
+      
+      if (Math.random() < getSpawnChance()) {
+        spawnSpecialItem();
+      }
+    }
+
+    function spawnSpecialItem() {
+      const availableTypes = specialItemTypes.filter(type => 
+        !type.minLevel || difficultyLevel >= type.minLevel
+      );
+      
+      const rand = Math.random();
+      let cumulativeChance = 0;
+      let selectedType = null;
+      
+      for (const type of availableTypes) {
+        cumulativeChance += type.chance;
+        if (rand < cumulativeChance) {
+          selectedType = type;
+          break;
+        }
+      }
+      
+      if (!selectedType) return;
+      
+      let attempts = 0;
+      let pos;
+      do {
+        pos = {
+          x: Math.floor(Math.random() * GRID_SIZE),
+          y: Math.floor(Math.random() * GRID_SIZE)
+        };
+        attempts++;
+      } while (
+        (snake.some(s => s.x === pos.x && s.y === pos.y) || 
+        (food.x === pos.x && food.y === pos.y) ||
+        specialItems.some(item => item.x === pos.x && item.y === pos.y) ||
+        obstacles.some(obs => obs.x === pos.x && obs.y === pos.y)) &&
+        attempts < 100
+      );
+      
+      if (attempts < 100) {
+        specialItems.push({
+          ...pos,
+          type: selectedType,
+          spawnTime: Date.now()
+        });
+      }
+    }
+
+    function updateSpecialItems() {
+      const now = Date.now();
+      specialItems = specialItems.filter(item => now - item.spawnTime < 10000);
+    }
+
+    function applyEffect(effectType, duration, itemType) {
+      const multiplier = getDifficultyMultiplier();
+      const scaledDuration = Math.floor(duration * (1 + multiplier * 0.5));
+      
+      const effect = {
+        type: effectType,
+        startTime: Date.now(),
+        duration: scaledDuration
+      };
+      
+      activeEffects = activeEffects.filter(e => e.type !== effectType && e.type !== 'mega');
+      
+      if (scaledDuration > 0) {
+        activeEffects.push(effect);
+      }
+      
+      switch(effectType) {
+        case 'speed':
+          showEffectMessage(`⚡ VITESSE MAXIMALE ! (${Math.ceil(scaledDuration/1000)}s)`);
+          break;
+        case 'slow':
+          showEffectMessage(`🐌 Ralenti... (${Math.ceil(scaledDuration/1000)}s)`);
+          break;
+        case 'shrink':
+          if (snake.length > 3) {
+            const cutAmount = Math.floor(snake.length / 2);
+            snake = snake.slice(0, snake.length - cutAmount);
+            showEffectMessage('✂️ Serpent coupé !');
+          }
+          break;
+        case 'coins':
+          const coinBonus = Math.floor(itemType.baseCoins * multiplier);
+          coins += coinBonus;
+          saveInventory();
+          document.getElementById('gameCoinsDisplay').textContent = coins;
+          showEffectMessage(`💎 +${coinBonus} PIÈCES !`);
+          break;
+        case 'invincible':
+          showEffectMessage(`🛡️ INVINCIBLE ! (${Math.ceil(scaledDuration/1000)}s)`);
+          break;
+        case 'double':
+          showEffectMessage(`✨ POINTS x2 ! (${Math.ceil(scaledDuration/1000)}s)`);
+          break;
+        case 'triple':
+          showEffectMessage(`🌟 POINTS x3 ! (${Math.ceil(scaledDuration/1000)}s)`);
+          break;
+        case 'mega':
+          activeEffects = [];
+          activeEffects.push(effect);
+          showEffectMessage(`💥 MÉGA COMBO x5 ! (${Math.ceil(scaledDuration/1000)}s)`);
+          break;
+        case 'destroyer':
+          showEffectMessage(`🔥 MODE DESTRUCTEUR ! (${Math.ceil(scaledDuration/1000)}s)`);
+          break;
+      }
+    }
+
+    function showEffectMessage(text) {
+      const msg = document.createElement('div');
+      msg.style.cssText = `
+        position: fixed;
+        top: 30%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        padding: 20px 40px;
+        background: linear-gradient(135deg, rgba(255, 215, 0, 0.95), rgba(255, 140, 0, 0.95));
+        color: #000000;
+        font-size: 2em;
+        border-radius: 20px;
+        border: 3px solid #ffffff;
+        z-index: 1000;
+        font-weight: 900;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        animation: effectPop 0.5s ease-out;
+      `;
+      msg.textContent = text;
+      document.body.appendChild(msg);
+      setTimeout(() => msg.remove(), 1500);
+    }
+
+    function updateEffects() {
+      const now = Date.now();
+      activeEffects = activeEffects.filter(effect => {
+        return now - effect.startTime < effect.duration;
+      });
+    }
+
+    function hasEffect(effectType) {
+      return activeEffects.some(e => e.type === effectType);
+    }
+
+    function getCurrentSpeed() {
+      if (hasEffect('speed')) return 80;
+      if (hasEffect('slow')) return 250;
+      return 150;
+    }
+
+    function update() {
+      if (!isGameRunning || isPaused) return;
+
+      updateDifficultyLevel();
+      updateEffects();
+      updateSpecialItems();
+      updateObstacles();
+
+      const head = { 
+        x: snake[0].x + direction.x, 
+        y: snake[0].y + direction.y 
+      };
+
+      if (head.x < 0 || head.x >= GRID_SIZE || head.y < 0 || head.y >= GRID_SIZE) {
+        if (!hasEffect('invincible')) {
+          gameOver();
+          return;
+        } else {
+          head.x = (head.x + GRID_SIZE) % GRID_SIZE;
+          head.y = (head.y + GRID_SIZE) % GRID_SIZE;
+        }
+      }
+
+      if (snake.some(s => s.x === head.x && s.y === head.y)) {
+        if (!hasEffect('invincible')) {
+          gameOver();
+          return;
+        }
+      }
+
+      if (checkObstacleCollision(head.x, head.y)) {
+        if (hasEffect('destroyer') || hasEffect('invincible')) {
+          destroyObstacle(head.x, head.y);
+        } else {
+          gameOver();
+          return;
+        }
+      }
+
+      snake.unshift(head);
+
+      if (head.x === food.x && head.y === food.y) {
+        const multiplier = getDifficultyMultiplier();
+        const basePoints = Math.floor(10 * multiplier);
+        
+        let finalPoints = basePoints;
+        if (hasEffect('mega')) finalPoints *= 5;
+        else if (hasEffect('triple')) finalPoints *= 3;
+        else if (hasEffect('double')) finalPoints *= 2;
+        
+        score += finalPoints;
+        
+        const coinGain = Math.floor(multiplier);
+        coins += coinGain;
+        saveInventory();
+        document.getElementById('scoreValue').textContent = score;
+        document.getElementById('gameCoinsDisplay').textContent = coins;
+        
+        createParticles(food.x, food.y, getEquippedFood().icon);
+        showCoinPopup(`+${coinGain} 💰`);
+        
+        spawnFood();
+      } else {
+        snake.pop();
+      }
+
+      for (let i = specialItems.length - 1; i >= 0; i--) {
+        const item = specialItems[i];
+        if (head.x === item.x && head.y === item.y) {
+          const multiplier = getDifficultyMultiplier();
+          let pointsToAdd = Math.floor(item.type.basePoints * multiplier);
+          
+          if (hasEffect('mega')) pointsToAdd *= 5;
+          else if (hasEffect('triple')) pointsToAdd *= 3;
+          else if (hasEffect('double')) pointsToAdd *= 2;
+          
+          score += pointsToAdd;
+          document.getElementById('scoreValue').textContent = score;
+          
+          applyEffect(item.type.effect, item.type.baseDuration, item.type);
+          createParticles(item.x, item.y, item.type.icon);
+          
+          specialItems.splice(i, 1);
+          
+          if (item.type.effect === 'speed' || item.type.effect === 'slow') {
+            clearInterval(gameLoop);
+            gameLoop = setInterval(update, getCurrentSpeed());
+          }
+        }
+      }
+
+      draw();
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      if (hasEffect('mega')) {
+        canvas.classList.add('mega-mode');
+        canvas.classList.remove('destroyer-mode');
+      } else if (hasEffect('destroyer')) {
+        canvas.classList.add('destroyer-mode');
+        canvas.classList.remove('mega-mode');
+      } else {
+        canvas.classList.remove('mega-mode');
+        canvas.classList.remove('destroyer-mode');
+      }
+      
+      const now = Date.now();
+      
+      ctx.save();
+      ctx.strokeStyle = `rgba(100, 100, 200, ${0.05 + difficultyLevel * 0.01})`;
+      ctx.lineWidth = 1;
+      for (let i = 0; i < GRID_SIZE; i++) {
+        ctx.beginPath();
+        ctx.moveTo(i * CELL_SIZE, 0);
+        ctx.lineTo(i * CELL_SIZE, canvas.height);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(0, i * CELL_SIZE);
+        ctx.lineTo(canvas.width, i * CELL_SIZE);
+        ctx.stroke();
+      }
+      ctx.restore();
+      
+      obstacles.forEach(obs => {
+        const age = now - obs.spawnTime;
+        const shake = Math.sin(age / 50) * 2;
+        const opacity = age > 28000 ? (30000 - age) / 2000 : 1;
+        
+        ctx.save();
+        ctx.globalAlpha = opacity;
+        ctx.shadowColor = obs.type.color;
+        ctx.shadowBlur = 15;
+        
+        ctx.fillStyle = obs.type.color;
+        ctx.fillRect(
+          obs.x * CELL_SIZE + 2 + shake, 
+          obs.y * CELL_SIZE + 2, 
+          CELL_SIZE - 4, 
+          CELL_SIZE - 4
+        );
+        
+        ctx.font = `${CELL_SIZE * 0.8}px Arial`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(
+          obs.type.icon, 
+          obs.x * CELL_SIZE + CELL_SIZE/2 + shake, 
+          obs.y * CELL_SIZE + CELL_SIZE/2
+        );
+        ctx.restore();
+      });
+      
+      specialItems.forEach(item => {
+        const age = now - item.spawnTime;
+        const pulse = Math.sin(age / 100) * 0.2 + 1;
+        const opacity = age > 8000 ? (10000 - age) / 2000 : 1;
+        
+        ctx.save();
+        ctx.globalAlpha = opacity;
+        ctx.shadowColor = item.type.color;
+        ctx.shadowBlur = 25 * pulse;
+        
+        ctx.fillStyle = item.type.color;
+        const size = (CELL_SIZE - 4) * pulse;
+        const offset = (CELL_SIZE - size) / 2;
+        ctx.fillRect(
+          item.x * CELL_SIZE + offset, 
+          item.y * CELL_SIZE + offset, 
+          size, 
+          size
+        );
+        
+        ctx.font = `${CELL_SIZE * 0.7 * pulse}px Arial`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(
+          item.type.icon, 
+          item.x * CELL_SIZE + CELL_SIZE/2, 
+          item.y * CELL_SIZE + CELL_SIZE/2
+        );
+        ctx.restore();
+      });
+      
+      const equippedFood = getEquippedFood();
+      const foodPulse = Math.sin(now / 150) * 0.15 + 1;
+      ctx.save();
+      ctx.fillStyle = '#ffd700';
+      ctx.shadowColor = '#ffd700';
+      ctx.shadowBlur = 20 * foodPulse;
+      const foodSize = (CELL_SIZE - 4) * foodPulse;
+      const foodOffset = (CELL_SIZE - foodSize) / 2;
+      ctx.fillRect(
+        food.x * CELL_SIZE + foodOffset, 
+        food.y * CELL_SIZE + foodOffset, 
+        foodSize, 
+        foodSize
+      );
+      ctx.font = `${CELL_SIZE * 0.7}px Arial`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(equippedFood.icon, food.x * CELL_SIZE + CELL_SIZE/2, food.y * CELL_SIZE + CELL_SIZE/2);
+      ctx.restore();
+      
+      const equippedSkin = getEquippedSkin();
+      const equippedHat = getEquippedHat();
+      const isInvincible = hasEffect('invincible');
+      const isMega = hasEffect('mega');
+      const isDestroyer = hasEffect('destroyer');
+      
+      snake.forEach((segment, index) => {
+        const isHead = index === 0;
+        const colorIndex = index % equippedSkin.colors.length;
+        let color = equippedSkin.colors[colorIndex];
+        
+        ctx.save();
+        
+        const trailIntensity = (1 - index / snake.length) * (0.3 + difficultyLevel * 0.05);
+        ctx.shadowColor = color;
+        ctx.shadowBlur = 10 + trailIntensity * 20;
+        
+        if (isMega) {
+          const megaShimmer = Math.sin(now / 80 + index * 0.5);
+          ctx.shadowColor = megaShimmer > 0 ? '#ff00ff' : '#ff0000';
+          ctx.shadowBlur = 30 + Math.abs(megaShimmer) * 20;
+          ctx.globalAlpha = 0.9 + Math.abs(megaShimmer) * 0.1;
+        } else if (isDestroyer) {
+          const fireShimmer = Math.sin(now / 60 + index * 0.3);
+          ctx.shadowColor = fireShimmer > 0 ? '#ff4500' : '#ff8c00';
+          ctx.shadowBlur = 25 + Math.abs(fireShimmer) * 15;
+          
+          if (isHead) {
+            ctx.shadowBlur = 35 + Math.abs(fireShimmer) * 20;
+          }
+        } else if (isInvincible) {
+          const shimmer = Math.sin(now / 100 + index) * 0.5 + 0.5;
+          ctx.globalAlpha = 0.7 + shimmer * 0.3;
+          ctx.shadowColor = '#4169e1';
+          ctx.shadowBlur = 20 + shimmer * 10;
+        }
+        
+        if (isHead) {
+          ctx.shadowBlur += 10;
+        }
+        
+        ctx.strokeStyle = `rgba(255, 255, 255, ${0.3 + trailIntensity * 0.4})`;
+        ctx.lineWidth = 2;
+        ctx.fillStyle = color;
+        ctx.fillRect(segment.x * CELL_SIZE + 1, segment.y * CELL_SIZE + 1, CELL_SIZE - 2, CELL_SIZE - 2);
+        ctx.strokeRect(segment.x * CELL_SIZE + 1, segment.y * CELL_SIZE + 1, CELL_SIZE - 2, CELL_SIZE - 2);
+        ctx.restore();
+        
+        if (isHead && equippedHat.icon) {
+          ctx.save();
+          ctx.font = `${CELL_SIZE * 0.5}px Arial`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.shadowColor = '#ffffff';
+          ctx.shadowBlur = 10;
+          ctx.fillText(equippedHat.icon, segment.x * CELL_SIZE + CELL_SIZE/2, segment.y * CELL_SIZE + CELL_SIZE/4);
+          ctx.restore();
+        }
+      });
+      
+      drawActiveEffects();
+    }
+    
+    function drawActiveEffects() {
+      const now = Date.now();
+      let yOffset = 10;
+      
+      activeEffects.forEach(effect => {
+        const remaining = effect.duration - (now - effect.startTime);
+        const seconds = Math.ceil(remaining / 1000);
+        
+        let icon = '';
+        switch(effect.type) {
+          case 'speed': icon = '⚡'; break;
+          case 'slow': icon = '🐌'; break;
+          case 'invincible': icon = '🛡️'; break;
+          case 'double': icon = '✨'; break;
+          case 'triple': icon = '🌟'; break;
+          case 'mega': icon = '💥'; break;
+          case 'destroyer': icon = '🔥'; break;
+        }
+        
+        ctx.save();
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        ctx.fillRect(10, yOffset, 120, 30);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '18px Ubuntu';
+        ctx.fillText(`${icon} ${seconds}s`, 20, yOffset + 20);
+        ctx.restore();
+        
+        yOffset += 35;
+      });
+    }
+
+    function gameOver() {
+      isGameRunning = false;
+      clearInterval(gameLoop);
+      document.getElementById('finalScore').textContent = `${config.score_label || defaultConfig.score_label}: ${score}`;
+      document.getElementById('gameOverOverlay').classList.add('active');
+    }
+
+    function startGame() {
+      showGame();
+      document.getElementById('gameOverOverlay').classList.remove('active');
+      document.getElementById('pauseButton').textContent = 'Pause';
+      initGame();
+      draw();
+      gameLoop = setInterval(update, 150);
+    }
+
+    function togglePause() {
+      if (!isGameRunning) return;
+      isPaused = !isPaused;
+      document.getElementById('pauseButton').textContent = isPaused ? 'Reprendre' : 'Pause';
+    }
+
+    function backToMenu() {
+      clearInterval(gameLoop);
+      isGameRunning = false;
+      showMenu();
+    }
+
+    function createParticles(gridX, gridY, icon) {
+      const canvasRect = canvas.getBoundingClientRect();
+      const posX = canvasRect.left + gridX * CELL_SIZE + CELL_SIZE / 2;
+      const posY = canvasRect.top + gridY * CELL_SIZE + CELL_SIZE / 2;
+      
+      for (let i = 0; i < 12; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        particle.textContent = icon;
+        particle.style.left = `${posX}px`;
+        particle.style.top = `${posY}px`;
+        particle.style.animationDelay = `${i * 0.03}s`;
+        
+        const angle = (i / 12) * Math.PI * 2;
+        const distance = 60 + Math.random() * 40;
+        particle.style.setProperty('--tx', `${Math.cos(angle) * distance}px`);
+        particle.style.setProperty('--ty', `${Math.sin(angle) * distance}px`);
+        
+        document.body.appendChild(particle);
+        
+        setTimeout(() => particle.remove(), 1000);
+      }
+    }
+
+    function showCoinPopup(text = '+1 💰') {
+      const canvasRect = canvas.getBoundingClientRect();
+      const popup = document.createElement('div');
+      popup.className = 'coin-popup';
+      popup.textContent = text;
+      popup.style.left = `${canvasRect.left + canvasRect.width / 2}px`;
+      popup.style.top = `${canvasRect.top + canvasRect.height * 0.2}px`;
+      document.body.appendChild(popup);
+      
+      setTimeout(() => popup.remove(), 800);
+    }
+
+    // Event Listeners
+    document.getElementById('playButton').addEventListener('click', startGame);
+    document.getElementById('pauseButton').addEventListener('click', togglePause);
+    document.getElementById('restartButton').addEventListener('click', startGame);
+    document.getElementById('backToMenuButton').addEventListener('click', backToMenu);
+
+    document.getElementById('shopButton').addEventListener('click', showShop);
+    document.getElementById('shopBackButton').addEventListener('click', () => {
+      document.getElementById('shopScreen').classList.remove('active');
+      document.getElementById('menuScreen').classList.remove('hidden');
+    });
+
+    document.querySelectorAll('.category-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentCategory = btn.dataset.category;
+        renderShop();
+      });
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (!isGameRunning || isPaused) return;
+      
+      switch(e.key) {
+        case 'ArrowUp':
+          if (direction.y === 0) direction = { x: 0, y: -1 };
+          break;
+        case 'ArrowDown':
+          if (direction.y === 0) direction = { x: 0, y: 1 };
+          break;
+        case 'ArrowLeft':
+          if (direction.x === 0) direction = { x: -1, y: 0 };
+          break;
+        case 'ArrowRight':
+          if (direction.x === 0) direction = { x: 1, y: 0 };
+          break;
+        case ' ':
+          togglePause();
+          break;
+      }
+      e.preventDefault();
+    });
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9a8eab6293fc763b',t:'MTc2NDg4NjYwMC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
