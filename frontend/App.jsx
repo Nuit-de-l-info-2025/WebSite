@@ -12,9 +12,10 @@ import IndexScreen from './IndexScreen'; // Import de IndexScreen
 
 // CONSTANTES FIXES
 const LOGIN_NAME = 'nuit-de-l-apero'; 
+const ROOT_NAME = 'root'; // Nouveau nom d'utilisateur root
 const SNAKE_GAME_PATH = '/snake_game.html'; 
 const PIXEL_GAME_PATH = '/pixel_game.html'; 
-const INDEX_HTML_PATH = '/index.html'; // Chemin Index
+const INDEX_HTML_PATH = '/index_game.html'; // Chemin Index
 
 const UbuntuDesktop = () => {
     // --- États du Composant ---
@@ -64,18 +65,11 @@ const UbuntuDesktop = () => {
         equipe: { name: 'equipe', title: 'Équipe' }
     };
 
-    // Liste complète des commandes (Ajout de 'index')
-    const availableCommands = ['help', 'ls', 'cd', 'cat', 'whoami', 'clear', 'echo', 'man', 'chat', 'snake', 'pixel', 'index', 'close'];
+    // Liste complète des commandes (Ajout de 'su root', 'exit')
+    const availableCommands = ['help', 'ls', 'cd', 'cat', 'whoami', 'clear', 'echo', 'man', 'chat', 'snake', 'pixel', 'index', 'close', 'su root', 'exit'];
     
-    // Définitions des fichiers (Ajout de index.html)
+    // Définitions des fichiers 
     const files = {
-        'equipe.txt': `La Nuit de l'Apéro est composée de:
-- Alice : Design & UX (Spécialiste Accessibilité)
-- Bob : Développement Front-end (React)
-- Charlie : Backend & DevOps (Sécurité)`,
-        'README.txt': 'Ce projet est une simulation de bureau Ubuntu 22.04 LTS.',
-        'info-team.txt': 'Contient les coordonnées internes de l\'équipe (confidentiel).',
-        'doc-accessibilite.txt': 'Documentation sur les fonctionnalités d\'accessibilité implémentées.',
         'snake.html': `<!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -105,7 +99,7 @@ const UbuntuDesktop = () => {
 </html>`
     };
     
-    // Contenu du Manuel (Mise à jour pour inclure 'index')
+    // Contenu du Manuel 
     const manualContent = `MANUEL D'UTILISATION (man)
 ----------------------------
 Les commandes disponibles sont :
@@ -115,12 +109,14 @@ Les commandes disponibles sont :
 - cat [fichier.txt] : Affiche le contenu d'un fichier.
 - whoami : Affiche le nom d'utilisateur actuel.
 - clear : Nettoie le terminal.
-- chat : Ouvre la fenêtre de discussion.
-- snake : Lance le jeu Snake.
-- pixel : Lance le jeu Pixel.
-- index : Lance l'application Index (fitness/haltère).
+- chat : Ouvre la fenêtre de discussion (standard user only).
+- pixel : Lance le jeu Pixel (standard user only).
+- index : Lance l'application Index (accessible à tous).
+- su root : **Passe en mode super-utilisateur (root) SANS MOT DE PASSE.**
+- exit : **Quitte le mode root** pour revenir à l'utilisateur standard.
 - close : Ferme la fenêtre flottante actuellement ouverte (Jeu, Fichier Texte).
 ----------------------------
+NOTE : Le jeu **snake** est un logiciel critique et ne peut être lancé qu'en mode root.
 Les dossiers disponibles sont : home, chat, projets, equipe.
 `;
 
@@ -165,6 +161,7 @@ Les dossiers disponibles sont : home, chat, projets, equipe.
     // --- Fonctions de Logique du Terminal ---
 
     useEffect(() => {
+        // Met à jour l'invite de commande avec l'utilisateur actuel
         setCommandHistory([`${currentSystemUser}@ubuntu:~/${currentPage}$ `, '']);
     }, [currentPage, userName, currentSystemUser]); 
 
@@ -205,7 +202,7 @@ Les dossiers disponibles sont : home, chat, projets, equipe.
         action();
     };
     
-    // Fonction pour lancer IndexScreen depuis le Dock
+    // Fonction pour lancer IndexScreen depuis le Dock (Autorisé pour tous)
     const openIndexScreenFromDock = () => {
         setShowIndex(true); 
     };
@@ -232,9 +229,25 @@ Les dossiers disponibles sont : home, chat, projets, equipe.
         setCommandHistory(prev => [...prev, `${currentSystemUser}@ubuntu:~/${currentPage}$ ${cmd}`]);
         setInput('');
         
-        // Retrait de 'su root' et 'exit'
-        if (cmd === 'su root' || cmd === 'exit') {
-            setCommandHistory(prev => [...prev, `bash: ${cmd}: command not found (permissions root désactivées)`, '']);
+        // 🔑 COMMANDE 'su root' (Pas de mot de passe)
+        if (cmd === 'su root') {
+            if (currentSystemUser === ROOT_NAME) {
+                setCommandHistory(prev => [...prev, `su: La commande 'su root' ne peut être exécutée par l'utilisateur root.`, '']);
+            } else {
+                setCurrentSystemUser(ROOT_NAME);
+                setCommandHistory(prev => [...prev, `Passage en mode super-utilisateur (root). Attention aux permissions!`, '']);
+            }
+            return;
+        }
+
+        // 🚪 COMMANDE 'exit'
+        if (cmd === 'exit') {
+            if (currentSystemUser === ROOT_NAME) {
+                setCurrentSystemUser(LOGIN_NAME);
+                setCommandHistory(prev => [...prev, `Déconnexion du mode root. Retour à ${LOGIN_NAME}.`, '']);
+            } else {
+                setCommandHistory(prev => [...prev, `exit: Vous n'êtes pas en mode root.`, '']);
+            }
             return;
         }
         
@@ -268,22 +281,30 @@ Les dossiers disponibles sont : home, chat, projets, equipe.
             return;
         }
         
-        // 🏋️‍♀️ COMMANDE 'index' (IndexScreen)
+        // 🏋️‍♀️ COMMANDE 'index' (IndexScreen) - ACCESSIBLE À TOUS
         if (cmd === 'index') {
             setCommandHistory(prev => [...prev, `Chargement de l'application Index...`, '']);
-            setShowIndex(true); // Ouvre la modale IndexScreen
+            setShowIndex(true); 
             return;
         }
 
-        // 🐍 COMMANDE 'snake'
+        // 🐍 COMMANDE 'snake' (UNiquement pour ROOT)
         if (cmd === 'snake') {
-            setCommandHistory(prev => [...prev, `Chargement du jeu Snake...`, '']);
+            if (currentSystemUser !== ROOT_NAME) {
+                 setCommandHistory(prev => [...prev, `snake: Permission refusée.`, '']);
+                 return;
+            }
+            setCommandHistory(prev => [...prev, `Chargement du jeu Snake en mode ROOT.`, '']);
             setShowSnake(true); 
             return;
         }
 
         // 👾 COMMANDE 'pixel' (Pixel Game)
         if (cmd === 'pixel') {
+            if (currentSystemUser === ROOT_NAME) {
+                 setCommandHistory(prev => [...prev, `pixel: Permission refusée. Les applications non critiques ne peuvent pas être lancées par root.`, '']);
+                 return;
+            }
             setCommandHistory(prev => [...prev, `Chargement du jeu Pixel...`, '']);
             setShowPixelGame(true); // Ouvre la modale du jeu Pixel
             return;
@@ -317,6 +338,10 @@ Les dossiers disponibles sont : home, chat, projets, equipe.
 
         // chat
         if (cmd === 'chat') {
+            if (currentSystemUser === ROOT_NAME) {
+                 setCommandHistory(prev => [...prev, `chat: Permission refusée. Les applications non critiques ne peuvent pas être lancées par root.`, '']);
+                 return;
+            }
             setShowChat(true); 
             setCommandHistory(prev => [...prev, 'Ouverture du ChatBot...', '']);
             setInput('');
@@ -499,7 +524,7 @@ Les dossiers disponibles sont : home, chat, projets, equipe.
                         <div className="text-white text-xl font-bold bg-red-900/70 p-6 rounded-lg shadow-2xl backdrop-blur-sm">
                             <h2 className="text-2xl mb-4 border-b border-red-600 pb-2">Dossier Équipe</h2>
                             <p className="text-sm font-light text-gray-200">
-                                Le fichier **`equipe.txt`** et **`info-team.txt`** sont accessibles en lecture ici. Utilisez **`cat [nom_fichier]`**.
+                                **Ce dossier est maintenant vide.** Tous les fichiers texte ont été supprimés du système.
                             </p>
                         </div>
                     )}
